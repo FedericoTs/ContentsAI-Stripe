@@ -92,10 +92,26 @@ export function ContentVisualization() {
     return () => window.removeEventListener("resize", updateSize);
   }, []);
 
+  // Auto-start the transformation animation after component mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowTransformation(true);
+    }, 1500); // Small delay to allow initial animations to complete
+
+    return () => clearTimeout(timer);
+  }, []);
+
   // Reset completed transforms when transformation is complete
   useEffect(() => {
     if (!showTransformation) {
       setCompletedTransforms([]);
+
+      // Auto-restart the animation after a pause
+      const timer = setTimeout(() => {
+        setShowTransformation(true);
+      }, 3000);
+
+      return () => clearTimeout(timer);
     }
   }, [showTransformation]);
 
@@ -286,7 +302,16 @@ export function ContentVisualization() {
                         isTransformed ? "bg-white" : format.color,
                       )}
                     >
-                      {format.icon}
+                      {/* Darker icon color when transformed */}
+                      <div
+                        className={cn(
+                          isTransformed
+                            ? "text-gray-700" // Darker color when transformed (white background)
+                            : "text-white", // White color when not transformed (colored background)
+                        )}
+                      >
+                        {format.icon}
+                      </div>
                     </div>
                     <p
                       className={cn(
@@ -479,67 +504,6 @@ export function ContentVisualization() {
             }}
           />
         ))}
-
-        {/* Transform button */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center">
-          <AnimatePresence mode="wait">
-            {!showTransformation ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Button
-                  onClick={() => setShowTransformation(true)}
-                  disabled={showTransformation}
-                  className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-full px-6 py-6 font-medium shadow-lg hover:shadow-cyan-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed border-0 h-auto"
-                >
-                  <Play className="mr-2 h-5 w-5" />
-                  Transform Content
-                </Button>
-              </motion.div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="flex flex-col items-center"
-              >
-                <div className="text-sm font-medium text-blue-300 mb-2">
-                  Transforming content...
-                </div>
-                <div className="flex space-x-1">
-                  {contentFormats
-                    .filter((format) => format.id !== "blog")
-                    .map((format) => (
-                      <motion.div
-                        key={`progress-${format.id}`}
-                        className={cn(
-                          "h-1 w-6 rounded-full",
-                          completedTransforms.includes(format.id)
-                            ? format.color
-                            : "bg-slate-700",
-                        )}
-                        initial={{ opacity: 0.5 }}
-                        animate={{
-                          opacity: completedTransforms.includes(format.id)
-                            ? 1
-                            : 0.5,
-                          scale: completedTransforms.includes(format.id)
-                            ? [1, 1.2, 1]
-                            : 1,
-                        }}
-                        transition={{
-                          scale: { duration: 0.3 },
-                        }}
-                      />
-                    ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
 
         {/* Premium footer */}
         <div className="absolute bottom-3 right-3 text-xs text-slate-400">
