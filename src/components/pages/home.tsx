@@ -29,6 +29,7 @@ import TestimonialsSection from "../home/TestimonialsSection";
 import FeaturesSection from "../home/FeaturesSection";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
+import { ContentVisualization } from "../home/ContentVisualization";
 
 export default function LandingPage() {
   const { user, signOut } = useAuth();
@@ -188,95 +189,7 @@ export default function LandingPage() {
                 <div className="absolute -z-10 inset-0 bg-gradient-to-tr from-purple-200/60 via-blue-300/40 to-teal-200/30 rounded-3xl blur-2xl transform scale-110" />
 
                 {/* Content Transformation Visualization */}
-                <div className="relative bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl shadow-xl overflow-hidden p-6">
-                  <motion.div
-                    className="absolute top-4 left-4 w-16 h-16 bg-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-xl"
-                    animate={{
-                      scale: [1, 1.1, 1],
-                      rotate: [0, 5, -5, 0],
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      repeatType: "reverse",
-                    }}
-                  >
-                    Input
-                  </motion.div>
-
-                  <div className="flex flex-wrap justify-center items-center gap-4 mt-24 mb-4">
-                    <motion.div
-                      className="w-20 h-20 bg-blue-500 rounded-lg flex items-center justify-center text-white text-sm p-2 text-center"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{
-                        opacity: 1,
-                        y: 0,
-                        transition: { delay: 0.5, duration: 0.5 },
-                      }}
-                    >
-                      Social Post
-                    </motion.div>
-
-                    <motion.div
-                      className="w-20 h-20 bg-teal-500 rounded-lg flex items-center justify-center text-white text-sm p-2 text-center"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{
-                        opacity: 1,
-                        y: 0,
-                        transition: { delay: 0.7, duration: 0.5 },
-                      }}
-                    >
-                      Blog Article
-                    </motion.div>
-
-                    <motion.div
-                      className="w-20 h-20 bg-indigo-500 rounded-lg flex items-center justify-center text-white text-sm p-2 text-center"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{
-                        opacity: 1,
-                        y: 0,
-                        transition: { delay: 0.9, duration: 0.5 },
-                      }}
-                    >
-                      Email
-                    </motion.div>
-
-                    <motion.div
-                      className="w-20 h-20 bg-pink-500 rounded-lg flex items-center justify-center text-white text-sm p-2 text-center"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{
-                        opacity: 1,
-                        y: 0,
-                        transition: { delay: 1.1, duration: 0.5 },
-                      }}
-                    >
-                      Video Script
-                    </motion.div>
-
-                    <motion.div
-                      className="w-20 h-20 bg-amber-500 rounded-lg flex items-center justify-center text-white text-sm p-2 text-center"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{
-                        opacity: 1,
-                        y: 0,
-                        transition: { delay: 1.3, duration: 0.5 },
-                      }}
-                    >
-                      Podcast
-                    </motion.div>
-                  </div>
-
-                  <motion.div
-                    className="text-center text-gray-700 font-medium"
-                    initial={{ opacity: 0 }}
-                    animate={{
-                      opacity: 1,
-                      transition: { delay: 1.5, duration: 0.5 },
-                    }}
-                  >
-                    One input transforms into multiple content formats
-                  </motion.div>
-                </div>
+                <ContentVisualization />
               </div>
             </div>
           </div>
