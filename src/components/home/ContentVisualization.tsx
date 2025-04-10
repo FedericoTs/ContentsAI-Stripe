@@ -542,7 +542,7 @@ export function ContentVisualization() {
         </div>
 
         {/* Premium footer */}
-        <div className="absolute bottom-3 right-3 text-xs text-slate-500">
+        <div className="absolute bottom-3 right-3 text-xs text-slate-400">
           Powered by ContentSphere™ AI Engine
         </div>
       </div>

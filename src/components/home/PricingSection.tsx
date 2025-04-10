@@ -1,10 +1,31 @@
-import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+"use client";
+
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { X, Check, CreditCard, Sparkles, Shield, Zap } from "lucide-react";
 import { useAuth } from "../../../supabase/auth";
 import { supabase } from "../../../supabase/supabase";
 import { useToast } from "@/components/ui/use-toast";
-import PriceCard, { Plan } from "./PriceCard";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
+export interface Plan {
+  id: string;
+  product: string;
+  name: string;
+  description: string;
+  price: number;
+  currency: string;
+  interval: string;
+}
 
 export default function PricingSection() {
   const { user } = useAuth();
@@ -116,10 +137,12 @@ export default function PricingSection() {
 
   // Format currency
   const formatCurrency = (amount: number, currency: string) => {
+    if (!amount || isNaN(amount)) return "$0";
+
     const formatter = new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: currency.toUpperCase(),
-      minimumFractionDigits: 2,
+      minimumFractionDigits: 0,
     });
 
     return formatter.format(amount / 100);
@@ -128,26 +151,31 @@ export default function PricingSection() {
   // Plan features
   const getPlanFeatures = (planType: any) => {
     const basicFeatures = [
-      "Core application features",
-      "Basic authentication",
-      "1GB storage",
-      "Community support",
+      "5 content transformations per day",
+      "Blog and social media formats",
+      "Basic AI content enhancement",
+      "Standard support",
     ];
 
     const proFeatures = [
-      ...basicFeatures,
-      "Advanced analytics",
+      "Unlimited content transformations",
+      "All content formats supported",
+      "Advanced AI content enhancement",
       "Priority support",
-      "10GB storage",
-      "Custom branding",
+      "Custom brand voice profiles",
+      "Analytics dashboard",
     ];
 
     const enterpriseFeatures = [
-      ...proFeatures,
+      "Unlimited content transformations",
+      "All content formats supported",
+      "Premium AI content enhancement",
       "Dedicated account manager",
       "Custom integrations",
-      "Unlimited storage",
+      "Advanced analytics",
+      "API access",
       "SLA guarantees",
+      "Team collaboration tools",
     ];
 
     // Convert planType to string and check if it includes the plan name
@@ -157,25 +185,92 @@ export default function PricingSection() {
     return basicFeatures;
   };
 
+  // Placeholder plans for development/preview
+  const placeholderPlans: Plan[] = [
+    {
+      id: "price_basic",
+      product: "BASIC",
+      name: "Starter",
+      description: "Perfect for individuals and small projects",
+      price: 1900,
+      currency: "usd",
+      interval: "month",
+    },
+    {
+      id: "price_pro",
+      product: "PRO",
+      name: "Professional",
+      description: "Ideal for growing businesses and teams",
+      price: 4900,
+      currency: "usd",
+      interval: "month",
+    },
+    {
+      id: "price_enterprise",
+      product: "ENTERPRISE",
+      name: "Enterprise",
+      description: "For organizations with advanced needs",
+      price: 9900,
+      currency: "usd",
+      interval: "month",
+    },
+  ];
+
+  // Use placeholder plans if no plans are loaded
+  const plansToDisplay = plans.length > 0 ? plans : placeholderPlans;
+
+  // Reorder the plans to swap first and last, keeping the middle one in place
+  const displayPlans =
+    plansToDisplay.length === 3
+      ? [plansToDisplay[2], plansToDisplay[1], plansToDisplay[0]]
+      : plansToDisplay;
+
+  const fadeInUpVariant = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i = 0) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: i * 0.1,
+        duration: 0.5,
+        ease: "easeOut",
+      },
+    }),
+  };
+
   return (
-    <section className="py-16 md:py-24 bg-white">
-      <div className="container px-4 mx-auto">
-        <div className="text-center mb-16">
-          <Badge className="mb-4 bg-gray-200 text-gray-800 hover:bg-gray-300 border-none">
+    <section className="py-20 relative overflow-hidden">
+      {/* Gradient orbs */}
+      <div className="absolute top-1/3 left-1/4 -z-10 h-[400px] w-[400px] rounded-full bg-purple-600/10 blur-[100px] opacity-70" />
+      <div className="absolute bottom-0 right-1/4 -z-10 h-[300px] w-[300px] rounded-full bg-blue-600/10 blur-[100px] opacity-70" />
+
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-16 max-w-3xl mx-auto"
+        >
+          <Badge className="mb-4 bg-white/10 backdrop-blur-sm text-cyan-400 hover:bg-white/20 border-0 px-3 py-1.5">
+            <CreditCard className="h-3.5 w-3.5 mr-2" />
             Pricing
           </Badge>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4 text-black">
-            Simple, Transparent Pricing
+          <h2 className="text-3xl md:text-5xl font-bold mb-6">
+            Simple, <span className="text-purple-400">Transparent</span> Pricing
           </h2>
-          <p className="text-gray-600 max-w-[700px] mx-auto">
-            Choose the perfect plan for your needs. All plans include access to
-            our core features. No hidden fees or surprises.
+          <p className="text-lg text-white/70">
+            Choose the perfect plan for your content needs. All plans include
+            access to our core AI transformation features. No hidden fees or
+            surprises.
           </p>
-        </div>
+        </motion.div>
 
         {error && (
-          <div
-            className="bg-red-100 border border-red-200 text-red-800 px-4 py-3 rounded relative mb-6"
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-red-900/30 backdrop-blur-md border border-red-500/30 text-red-200 px-4 py-3 rounded-lg relative mb-6 max-w-3xl mx-auto"
             role="alert"
           >
             <span className="block sm:inline">{error}</span>
@@ -186,41 +281,170 @@ export default function PricingSection() {
               <span className="sr-only">Dismiss</span>
               <X className="h-4 w-4" />
             </button>
-          </div>
+          </motion.div>
         )}
 
         {isLoadingPlans ? (
           <div className="flex justify-center items-center py-12">
-            <div className="animate-pulse space-y-4">
-              <div className="h-12 bg-gray-200 rounded w-64"></div>
-              <div className="h-24 bg-gray-200 rounded w-80"></div>
-              <div className="h-8 bg-gray-200 rounded w-40 mx-auto"></div>
+            <div className="space-y-8">
+              <div className="h-12 bg-white/5 rounded-lg w-64 animate-pulse"></div>
+              <div className="h-24 bg-white/5 rounded-lg w-80 animate-pulse"></div>
+              <div className="h-8 bg-white/5 rounded-lg w-40 mx-auto animate-pulse"></div>
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {plans.length > 0 ? (
-              plans.map((plan, index) => (
-                <PriceCard
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {displayPlans.map((plan, index) => {
+              const features = getPlanFeatures(plan.product);
+              const isPopular = index === 1;
+              const planGradient =
+                index === 0
+                  ? "from-blue-500/20 to-blue-700/20"
+                  : index === 1
+                    ? "from-purple-500/20 to-purple-700/20"
+                    : "from-cyan-500/20 to-cyan-700/20";
+
+              const buttonGradient =
+                index === 0
+                  ? "from-blue-500 to-blue-600"
+                  : index === 1
+                    ? "from-purple-500 to-purple-600"
+                    : "from-cyan-500 to-cyan-600";
+
+              const iconColor =
+                index === 0
+                  ? "text-blue-400"
+                  : index === 1
+                    ? "text-purple-400"
+                    : "text-cyan-400";
+
+              return (
+                <motion.div
                   key={plan.id}
-                  plan={plan}
-                  isLoading={isLoading}
-                  processingPlanId={processingPlanId}
-                  onCheckout={handleCheckout}
-                  formatCurrency={formatCurrency}
-                  features={getPlanFeatures(plan.product)}
-                  isPopular={index === 1} // Make the middle plan popular
-                />
-              ))
-            ) : (
-              <div className="col-span-3 text-center py-8">
-                <p className="text-gray-500">
-                  No pricing plans available at the moment.
-                </p>
-              </div>
-            )}
+                  variants={fadeInUpVariant}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  custom={index}
+                  className="relative"
+                >
+                  {isPopular && (
+                    <div className="absolute -top-5 inset-x-0 flex justify-center">
+                      <Badge className="bg-gradient-to-r from-purple-500 to-purple-700 text-white border-0 px-3 py-1 shadow-lg">
+                        <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                        Most Popular
+                      </Badge>
+                    </div>
+                  )}
+
+                  <Card
+                    className={`h-full bg-gradient-to-br ${planGradient} backdrop-blur-md border ${
+                      isPopular ? "border-purple-500/30" : "border-white/10"
+                    } overflow-hidden relative ${
+                      isPopular ? "shadow-[0_0_30px_rgba(168,85,247,0.15)]" : ""
+                    }`}
+                  >
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-md -z-10" />
+
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-2xl font-bold text-white">
+                        {plan.name}
+                      </CardTitle>
+                      <CardDescription className="text-white/70">
+                        {plan.description}
+                      </CardDescription>
+                    </CardHeader>
+
+                    <CardContent className="pb-0">
+                      <div className="mb-6">
+                        <span className="text-4xl font-bold text-white">
+                          {formatCurrency(
+                            plan.amount || plan.price,
+                            plan.currency,
+                          )}
+                        </span>
+                        <span className="text-white/50 ml-2">
+                          /{plan.interval}
+                        </span>
+                      </div>
+
+                      <ul className="space-y-3 mb-6">
+                        {features.map((feature, i) => (
+                          <li key={i} className="flex items-start">
+                            <Check
+                              className={`h-5 w-5 mr-2 mt-0.5 ${iconColor}`}
+                            />
+                            <span className="text-white/80">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+
+                    <CardFooter className="pt-4">
+                      <Button
+                        onClick={() => handleCheckout(plan.id)}
+                        disabled={isLoading && processingPlanId === plan.id}
+                        className={`w-full bg-gradient-to-r ${buttonGradient} hover:from-purple-600 hover:to-blue-600 text-white border-0 h-12 relative overflow-hidden group`}
+                      >
+                        <span className="relative z-10 flex items-center">
+                          {isLoading && processingPlanId === plan.id ? (
+                            <>
+                              <span className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              {index === 0
+                                ? "Get Started"
+                                : index === 1
+                                  ? "Choose Pro"
+                                  : "Contact Sales"}
+                            </>
+                          )}
+                        </span>
+                        <span className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
         )}
+
+        {/* Enterprise callout */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+          className="mt-16 max-w-4xl mx-auto"
+        >
+          <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 backdrop-blur-md border border-white/10 rounded-xl p-8 relative overflow-hidden">
+            <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-soft-light pointer-events-none" />
+
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex-1">
+                <div className="flex items-center mb-2">
+                  <Shield className="h-5 w-5 mr-2 text-cyan-400" />
+                  <h3 className="text-xl font-bold text-white">
+                    Need a custom solution?
+                  </h3>
+                </div>
+                <p className="text-white/70">
+                  Contact our sales team for custom pricing, dedicated support,
+                  and tailored solutions for your enterprise needs.
+                </p>
+              </div>
+              <div>
+                <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white border-0 px-6">
+                  <Zap className="h-4 w-4 mr-2" />
+                  Contact Sales
+                </Button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </section>
   );
