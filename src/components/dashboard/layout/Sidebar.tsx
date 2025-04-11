@@ -37,7 +37,7 @@ const defaultNavItems: NavItem[] = [
   },
   { icon: <FileText size={18} />, label: "Content", href: "/content" },
   { icon: <FolderKanban size={18} />, label: "Archive", href: "/archive" },
-  { icon: <Calendar size={18} />, label: "Calendar", href: "#" },
+  { icon: <Calendar size={18} />, label: "Calendar", href: "/schedule" },
   { icon: <Users size={18} />, label: "Team", href: "/team" },
 ];
 

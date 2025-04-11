@@ -123,3 +123,121 @@
     @apply bg-white/10 backdrop-blur-sm hover:bg-white/20 border-0 px-3 py-1.5;
   }
 }
+
+/* Custom styles for react-big-calendar in dark mode */
+.calendar-dark .rbc-month-view,
+.calendar-dark .rbc-time-view,
+.calendar-dark .rbc-agenda-view {
+  background-color: rgba(17, 24, 39, 0.7);
+  border-color: rgba(75, 85, 99, 0.5);
+}
+
+.calendar-dark .rbc-header,
+.calendar-dark .rbc-time-header-content,
+.calendar-dark .rbc-time-header-gutter {
+  background-color: rgba(31, 41, 55, 0.8);
+  color: rgba(243, 244, 246, 0.9);
+  border-color: rgba(75, 85, 99, 0.5);
+  padding: 8px 0;
+}
+
+.calendar-dark .rbc-month-row,
+.calendar-dark .rbc-day-bg,
+.calendar-dark .rbc-time-content,
+.calendar-dark .rbc-time-slot,
+.calendar-dark .rbc-agenda-table {
+  border-color: rgba(75, 85, 99, 0.5);
+}
+
+.calendar-dark .rbc-today {
+  background-color: rgba(79, 70, 229, 0.15);
+}
+
+.calendar-dark .rbc-off-range-bg {
+  background-color: rgba(17, 24, 39, 0.4);
+}
+
+.calendar-dark .rbc-toolbar button {
+  color: white;
+  background-color: rgba(31, 41, 55, 0.8);
+  border-color: rgba(75, 85, 99, 0.5);
+}
+
+.calendar-dark .rbc-toolbar button:hover {
+  background-color: rgba(55, 65, 81, 0.8);
+}
+
+.calendar-dark .rbc-toolbar button.rbc-active {
+  background-color: rgba(79, 70, 229, 0.8);
+  border-color: rgba(79, 70, 229, 0.5);
+}
+
+.calendar-dark .rbc-toolbar-label {
+  color: white;
+  font-weight: 600;
+}
+
+.calendar-dark .rbc-event {
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.calendar-dark .rbc-event-label {
+  font-size: 0.75rem;
+}
+
+.calendar-dark .rbc-event-content {
+  font-size: 0.875rem;
+}
+
+/* Drag and drop styles */
+.calendar-dark
+  .rbc-addons-dnd
+  .rbc-addons-dnd-resize-ns-anchor
+  .rbc-addons-dnd-resize-ns-icon {
+  height: 10px;
+  margin: 0 auto;
+  background-color: rgba(255, 255, 255, 0.7);
+  border-radius: 2px;
+}
+
+.calendar-dark
+  .rbc-addons-dnd
+  .rbc-addons-dnd-resize-ew-anchor
+  .rbc-addons-dnd-resize-ew-icon {
+  width: 10px;
+  margin: auto 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  border-radius: 2px;
+}
+
+.calendar-dark .rbc-addons-dnd .rbc-addons-dnd-dragging {
+  opacity: 0.8;
+  transform: scale(1.05);
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
+}
+
+.calendar-dark .rbc-addons-dnd .rbc-addons-dnd-resize-anchor {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.calendar-dark .rbc-addons-dnd .rbc-addons-dnd-drag-preview {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+  border: 2px dashed rgba(255, 255, 255, 0.5);
+}
+
+/* Enhanced drag and drop visual feedback */
+.calendar-dark .rbc-event.being-dragged {
+  opacity: 0.7;
+  border: 2px dashed rgba(255, 255, 255, 0.5) !important;
+}
+
+.calendar-dark .rbc-day-slot.rbc-drop-target,
+.calendar-dark .rbc-day-bg.rbc-drop-target {
+  background-color: rgba(79, 70, 229, 0.2);
+  transition: background-color 0.2s ease;
+}

@@ -10,6 +10,7 @@ import Pricing from "./components/pages/pricing";
 import Team from "./components/pages/team";
 import Content from "./components/pages/content";
 import Archive from "./components/pages/archive";
+import Schedule from "./components/pages/schedule";
 import { AuthProvider, useAuth } from "../supabase/auth";
 import { Toaster } from "./components/ui/toaster";
 
@@ -51,6 +52,14 @@ function AppRoutes() {
         <Route path="/signup" element={<SignUpForm />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/success" element={<Success />} />
+        <Route
+          path="/schedule"
+          element={
+            <PrivateRoute path="/schedule">
+              <Schedule />
+            </PrivateRoute>
+          }
+        />
         <Route
           path="/dashboard"
           element={
