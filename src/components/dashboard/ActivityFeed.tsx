@@ -102,24 +102,25 @@ const ActivityFeed = ({
                 </Avatar>
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-sm">{activity.user.name}</span>
+                    <span className="font-medium text-sm">
+                      {activity.user.name}
+                    </span>
                     <span className="text-xs text-gray-500">
                       {activity.timestamp}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600">
-                    {activity.content}
-                  </p>
+                  <p className="text-sm text-gray-600">{activity.content}</p>
                   {activity.project && (
-                    <Badge variant="outline" className="mt-1 text-xs bg-gray-50">
+                    <Badge
+                      variant="outline"
+                      className="mt-1 text-xs text-blue-500 bg-gray-50"
+                    >
                       {activity.project}
                     </Badge>
                   )}
                 </div>
               </div>
-              {index < activities.length - 1 && (
-                <Separator className="my-4" />
-              )}
+              {index < activities.length - 1 && <Separator className="my-4" />}
             </div>
           ))}
         </div>
