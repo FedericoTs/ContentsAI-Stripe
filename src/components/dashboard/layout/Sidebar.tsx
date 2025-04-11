@@ -10,6 +10,7 @@ import {
   Settings,
   HelpCircle,
   FolderKanban,
+  FileText,
 } from "lucide-react";
 import { applyTempoTheme } from "@/lib/tempo-theme";
 
@@ -27,11 +28,17 @@ interface SidebarProps {
 }
 
 const defaultNavItems: NavItem[] = [
-  { icon: <Home size={18} />, label: "Home" },
-  { icon: <LayoutDashboard size={18} />, label: "Dashboard", isActive: true },
-  { icon: <FolderKanban size={18} />, label: "Projects" },
-  { icon: <Calendar size={18} />, label: "Calendar" },
-  { icon: <Users size={18} />, label: "Team" },
+  { icon: <Home size={18} />, label: "Home", href: "/" },
+  {
+    icon: <LayoutDashboard size={18} />,
+    label: "Dashboard",
+    href: "/dashboard",
+    isActive: true,
+  },
+  { icon: <FolderKanban size={18} />, label: "Projects", href: "#" },
+  { icon: <Calendar size={18} />, label: "Calendar", href: "#" },
+  { icon: <Users size={18} />, label: "Team", href: "/team" },
+  { icon: <FileText size={18} />, label: "Content", href: "/content" },
 ];
 
 const defaultBottomItems: NavItem[] = [
@@ -60,7 +67,12 @@ const Sidebar = ({
               key={item.label}
               variant={item.label === activeItem ? "secondary" : "ghost"}
               className={`w-full justify-start gap-2 text-sm h-10 ${item.label === activeItem ? "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 hover:text-purple-200" : "text-gray-300 hover:bg-gray-800/50 hover:text-gray-100"}`}
-              onClick={() => onItemClick(item.label)}
+              onClick={() => {
+                onItemClick(item.label);
+                if (item.href) {
+                  window.location.href = item.href;
+                }
+              }}
             >
               <span
                 className={

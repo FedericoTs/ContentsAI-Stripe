@@ -7,10 +7,18 @@ import Dashboard from "./components/pages/dashboard";
 import Success from "./components/pages/success";
 import Home from "./components/pages/home";
 import Pricing from "./components/pages/pricing";
+import Team from "./components/pages/team";
+import Content from "./components/pages/content";
 import { AuthProvider, useAuth } from "../supabase/auth";
 import { Toaster } from "./components/ui/toaster";
 
-function PrivateRoute({ children }: { children: React.ReactNode }) {
+function PrivateRoute({
+  children,
+  path,
+}: {
+  children: React.ReactNode;
+  path?: string;
+}) {
   const { user, loading, subscriptionStatus } = useAuth();
 
   if (loading) {
@@ -18,36 +26,60 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    return <Navigate to="/" />;
+    return <Navigate to="/login" />;
   }
 
-  // Redirect to pricing if no active subscription or trial
-  if (!subscriptionStatus.isActive && !subscriptionStatus.trialActive) {
-    return <Navigate to="/pricing" />;
-  }
+  // For debugging - log the subscription status
+  console.log("Subscription status:", subscriptionStatus);
 
+  // Always allow access to protected routes
   return <>{children}</>;
 }
 
 function AppRoutes() {
+  // Use the routes from tempo-routes when in Tempo environment
+  const tempoRoutesElement =
+    import.meta.env.VITE_TEMPO === "true" ? useRoutes(routes) : null;
+
   return (
     <>
+      {tempoRoutesElement}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<LoginForm />} />
         <Route path="/signup" element={<SignUpForm />} />
         <Route path="/pricing" element={<Pricing />} />
+        <Route path="/success" element={<Success />} />
         <Route
           path="/dashboard"
           element={
-            <PrivateRoute>
+            <PrivateRoute path="/dashboard">
               <Dashboard />
             </PrivateRoute>
           }
         />
-        <Route path="/success" element={<Success />} />
+        <Route
+          path="/team"
+          element={
+            <PrivateRoute path="/team">
+              <Team />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/content"
+          element={
+            <PrivateRoute path="/content">
+              <Content />
+            </PrivateRoute>
+          }
+        />
+        {/* Add a route for Tempo storyboards if in Tempo environment */}
+        {import.meta.env.VITE_TEMPO === "true" && (
+          <Route path="/tempobook/*" element={null} />
+        )}
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
-      {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
     </>
   );
 }
