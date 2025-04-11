@@ -13,6 +13,7 @@ import {
 } from "../ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import PersonalCollectionImport from "../content/PersonalCollectionImport";
+import ActivityFeed from "../dashboard/ActivityFeed";
 
 const Content = () => {
   const [transformationType, setTransformationType] = useState("text-to-text");
@@ -608,6 +609,10 @@ const Content = () => {
             </Button>
           </div>
         </main>
+
+        <div className="w-[280px] border-l border-white/10 bg-black/40 backdrop-blur-md">
+          <ActivityFeed />
+        </div>
       </div>
     </div>
   );

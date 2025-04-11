@@ -35,10 +35,10 @@ const defaultNavItems: NavItem[] = [
     href: "/dashboard",
     isActive: true,
   },
-  { icon: <FolderKanban size={18} />, label: "Projects", href: "#" },
+  { icon: <FileText size={18} />, label: "Content", href: "/content" },
+  { icon: <FolderKanban size={18} />, label: "Archive", href: "/archive" },
   { icon: <Calendar size={18} />, label: "Calendar", href: "#" },
   { icon: <Users size={18} />, label: "Team", href: "/team" },
-  { icon: <FileText size={18} />, label: "Content", href: "/content" },
 ];
 
 const defaultBottomItems: NavItem[] = [
