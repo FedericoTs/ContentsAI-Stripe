@@ -32,7 +32,7 @@ export default function TestimonialsSection() {
       role: "CTO",
       company: "TechFlow",
       content:
-        "Tempo has dramatically reduced our development time. The content transformation is seamless and the output quality is exceptional. We've increased our content production by 300% while maintaining our brand voice.",
+        "ContentSphere has dramatically reduced our development time. The content transformation is seamless and the output quality is exceptional. We've increased our content production by 300% while maintaining our brand voice.",
       avatar: "sarah",
       companyColor: "bg-gradient-to-r from-purple-500 to-purple-700",
     },
@@ -42,7 +42,7 @@ export default function TestimonialsSection() {
       role: "Lead Developer",
       company: "InnovateCorp",
       content:
-        "I've tried many content platforms, but Tempo stands out with its AI capabilities and user experience. Our team now produces content for 5 different channels in the time it used to take for just one.",
+        "I've tried many content platforms, but ContentSphere stands out with its AI capabilities and user experience. Our team now produces content for 5 different channels in the time it used to take for just one.",
       avatar: "michael",
       companyColor: "bg-gradient-to-r from-blue-500 to-blue-700",
     },
@@ -52,7 +52,7 @@ export default function TestimonialsSection() {
       role: "Product Manager",
       company: "DigitalWave",
       content:
-        "Our marketing team was able to scale our content strategy in record time thanks to Tempo. The multi-format transformation features saved us weeks of work and helped us reach entirely new audiences.",
+        "Our marketing team was able to scale our content strategy in record time thanks to ContentSphere. The multi-format transformation features saved us weeks of work and helped us reach entirely new audiences.",
       avatar: "aisha",
       companyColor: "bg-gradient-to-r from-pink-500 to-pink-700",
     },
@@ -62,7 +62,7 @@ export default function TestimonialsSection() {
       role: "Marketing Director",
       company: "GrowthLabs",
       content:
-        "Tempo has been a game-changer for our content strategy. We're now able to maintain a consistent presence across all platforms with a fraction of the resources. The ROI has been incredible.",
+        "ContentSphere has been a game-changer for our content strategy. We're now able to maintain a consistent presence across all platforms with a fraction of the resources. The ROI has been incredible.",
       avatar: "david",
       companyColor: "bg-gradient-to-r from-green-500 to-green-700",
     },
@@ -96,7 +96,6 @@ export default function TestimonialsSection() {
       {/* Gradient orbs */}
       <div className="absolute top-1/3 right-1/4 -z-10 h-[400px] w-[400px] rounded-full bg-purple-600/10 blur-[100px] opacity-70" />
       <div className="absolute bottom-0 left-1/3 -z-10 h-[300px] w-[300px] rounded-full bg-blue-600/10 blur-[100px] opacity-70" />
-
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -115,7 +114,7 @@ export default function TestimonialsSection() {
           </h2>
           <p className="text-lg text-white/70">
             See how innovative companies are transforming their content strategy
-            with Tempo.
+            with ContentSphere.
           </p>
         </motion.div>
 
@@ -213,9 +212,9 @@ export default function TestimonialsSection() {
 
             <blockquote className="text-xl md:text-2xl font-medium text-white mb-6 relative">
               <Quote className="absolute -top-6 -left-6 h-12 w-12 text-purple-500/20" />
-              Tempo has completely transformed how our team creates content.
-              What used to take us weeks now takes hours, and the quality is
-              consistently excellent across all formats.
+              ContentSphere has completely transformed how our team creates
+              content. What used to take us weeks now takes hours, and the
+              quality is consistently excellent across all formats.
             </blockquote>
 
             <div className="text-white/70">

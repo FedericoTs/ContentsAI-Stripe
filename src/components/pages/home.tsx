@@ -140,7 +140,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
-                  Tempo
+                  ContentSphere
                 </span>
               </Link>
             </div>
@@ -832,8 +832,8 @@ export default function LandingPage() {
                 <span className="text-purple-400">Questions</span>
               </h2>
               <p className="text-lg text-white/70">
-                Everything you need to know about Tempo and how it can transform
-                your content strategy.
+                Everything you need to know about ContentSphere and how it can
+                transform your content strategy.
               </p>
             </motion.div>
 
@@ -847,30 +847,31 @@ export default function LandingPage() {
                 {[
                   {
                     question:
-                      "How does Tempo's AI content transformation work?",
+                      "How does ContentSphere's AI content transformation work?",
                     answer:
-                      "Tempo uses advanced AI models to analyze your input content and transform it into multiple formats while preserving your message and brand voice. Our technology understands context, audience, and platform-specific requirements to create optimized content for each channel.",
+                      "ContentSphere uses advanced AI models to analyze your input content and transform it into multiple formats while preserving your message and brand voice. Our technology understands context, audience, and platform-specific requirements to create optimized content for each channel.",
                   },
                   {
                     question: "Can I customize the output for my brand voice?",
                     answer:
-                      "Tempo allows you to create and save brand voice profiles that include your tone, style preferences, key messaging, and even specific phrases to include or avoid. All generated content will align with your defined brand guidelines.",
+                      "ContentSphere allows you to create and save brand voice profiles that include your tone, style preferences, key messaging, and even specific phrases to include or avoid. All generated content will align with your defined brand guidelines.",
                   },
                   {
-                    question: "How much time can I save using Tempo?",
+                    question: "How much time can I save using ContentSphere?",
                     answer:
-                      "Our customers report saving an average of 8.5 hours per week on content creation and distribution. This translates to approximately 34 hours per month or over 400 hours per year that can be redirected to strategy and other high-value activities.",
+                      "Our customers report saving an average of 8.5 hours per week on content creation and distribution. This translates to approximately 54 hours per month or over 600 hours per year that can be redirected to strategy and other high-value activities.",
                   },
                   {
                     question:
-                      "Is the content created by Tempo original and SEO-friendly?",
+                      "Is the content created by ContentSphere original and SEO-friendly?",
                     answer:
-                      "Yes, all content created by Tempo is original and optimized for search engines. Our AI generates unique content based on your input, and our SEO enhancement features ensure your content includes relevant keywords, proper structure, and metadata recommendations.",
+                      "Yes, all content created by ContentSphere is original and optimized for search engines. Our AI generates unique content based on your input, and our SEO enhancement features ensure your content includes relevant keywords, proper structure, and metadata recommendations.",
                   },
                   {
-                    question: "Can I integrate Tempo with my existing tools?",
+                    question:
+                      "Can I integrate ContentSphere with my existing tools?",
                     answer:
-                      "Tempo offers seamless integration with popular marketing tools, CMS platforms, social media schedulers, and analytics solutions. We support direct publishing to WordPress, Shopify, HubSpot, Buffer, Hootsuite, and many more platforms through our API and native integrations.",
+                      "ContentSphere offers seamless integration with popular marketing tools, CMS platforms, social media schedulers, and analytics solutions. We support direct publishing to WordPress, Shopify, HubSpot, Buffer, Hootsuite, and many more platforms through our API and native integrations.",
                   },
                 ].map((faq, index) => (
                   <AccordionItem
@@ -986,7 +987,7 @@ export default function LandingPage() {
                     transition={{ delay: 0.4, duration: 0.5 }}
                   >
                     Join thousands of forward-thinking companies already saving
-                    time and maximizing their content reach with Tempo.
+                    time and maximizing their content reach with ContentSphere.
                   </motion.p>
 
                   <motion.div
@@ -1065,7 +1066,7 @@ export default function LandingPage() {
                     <Zap className="h-5 w-5 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400" />
                   </div>
                 </div>
-                Tempo
+                ContentSphere
               </Link>
               <p className="text-white/70 mb-6">
                 An AI-powered platform for transforming content into multiple
