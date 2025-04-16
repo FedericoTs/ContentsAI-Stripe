@@ -13,6 +13,7 @@ import Archive from "./components/pages/archive";
 import Schedule from "./components/pages/schedule";
 import { AuthProvider, useAuth } from "../supabase/auth";
 import { Toaster } from "./components/ui/toaster";
+import DashboardLayout from "./components/dashboard/layout/DashboardLayout";
 
 function PrivateRoute({
   children,
@@ -52,46 +53,23 @@ function AppRoutes() {
         <Route path="/signup" element={<SignUpForm />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/success" element={<Success />} />
+
+        {/* Dashboard layout with nested routes */}
         <Route
-          path="/schedule"
+          path="/"
           element={
-            <PrivateRoute path="/schedule">
-              <Schedule />
+            <PrivateRoute>
+              <DashboardLayout />
             </PrivateRoute>
           }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            <PrivateRoute path="/dashboard">
-              <Dashboard />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/team"
-          element={
-            <PrivateRoute path="/team">
-              <Team />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/content"
-          element={
-            <PrivateRoute path="/content">
-              <Content />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/archive"
-          element={
-            <PrivateRoute path="/archive">
-              <Archive />
-            </PrivateRoute>
-          }
-        />
+        >
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="team" element={<Team />} />
+          <Route path="content" element={<Content />} />
+          <Route path="archive" element={<Archive />} />
+          <Route path="schedule" element={<Schedule />} />
+        </Route>
+
         {/* Add a route for Tempo storyboards if in Tempo environment */}
         {import.meta.env.VITE_TEMPO === "true" && (
           <Route path="/tempobook/*" element={null} />

@@ -2,6 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Link, useLocation } from "react-router-dom";
 import {
   Home,
   LayoutDashboard,
@@ -48,9 +49,30 @@ const defaultBottomItems: NavItem[] = [
 
 const Sidebar = ({
   items = defaultNavItems,
-  activeItem = "Dashboard",
+  activeItem,
   onItemClick = () => {},
 }: SidebarProps) => {
+  const location = useLocation();
+  const currentPath = location.pathname;
+
+  // Determine active item based on current path if not explicitly provided
+  const determineActiveItem = () => {
+    if (activeItem) return activeItem;
+
+    const pathMap: Record<string, string> = {
+      "/dashboard": "Dashboard",
+      "/content": "Content",
+      "/archive": "Archive",
+      "/schedule": "Calendar",
+      "/team": "Team",
+      "/": "Home",
+    };
+
+    return pathMap[currentPath] || "Dashboard";
+  };
+
+  const activeItemName = determineActiveItem();
+
   return (
     <div className="w-[240px] h-full border-r border-gray-800/20 bg-gray-950/90 flex flex-col">
       <div className="p-4">
@@ -65,25 +87,38 @@ const Sidebar = ({
           {items.map((item) => (
             <Button
               key={item.label}
-              variant={item.label === activeItem ? "secondary" : "ghost"}
-              className={`w-full justify-start gap-2 text-sm h-10 ${item.label === activeItem ? "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 hover:text-purple-200" : "text-gray-300 hover:bg-gray-800/50 hover:text-gray-100"}`}
-              onClick={() => {
-                onItemClick(item.label);
-                if (item.href) {
-                  window.location.href = item.href;
-                }
-              }}
+              variant={item.label === activeItemName ? "secondary" : "ghost"}
+              className={`w-full justify-start gap-2 text-sm h-10 ${item.label === activeItemName ? "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 hover:text-purple-200" : "text-gray-300 hover:bg-gray-800/50 hover:text-gray-100"}`}
+              asChild
+              onClick={() => onItemClick(item.label)}
             >
-              <span
-                className={
-                  item.label === activeItem
-                    ? "text-purple-300"
-                    : "text-gray-400"
-                }
-              >
-                {item.icon}
-              </span>
-              {item.label}
+              {item.href ? (
+                <Link to={item.href}>
+                  <span
+                    className={
+                      item.label === activeItemName
+                        ? "text-purple-300"
+                        : "text-gray-400"
+                    }
+                  >
+                    {item.icon}
+                  </span>
+                  {item.label}
+                </Link>
+              ) : (
+                <div>
+                  <span
+                    className={
+                      item.label === activeItemName
+                        ? "text-purple-300"
+                        : "text-gray-400"
+                    }
+                  >
+                    {item.icon}
+                  </span>
+                  {item.label}
+                </div>
+              )}
             </Button>
           ))}
         </div>
