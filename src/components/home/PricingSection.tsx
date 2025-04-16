@@ -398,7 +398,7 @@ export default function PricingSection() {
                                 ? "Get Started"
                                 : index === 1
                                   ? "Choose Pro"
-                                  : "Contact Sales"}
+                                  : "Get the Most"}
                             </>
                           )}
                         </span>
