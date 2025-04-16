@@ -11,6 +11,7 @@ import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
 // Initialize the OpenAI client
 const openai = new OpenAI({
   apiKey: import.meta.env.VITE_OPENAI_API_KEY || "",
+  dangerouslyAllowBrowser: true, // Enable browser usage with caution
 });
 
 // ElevenLabs API key
