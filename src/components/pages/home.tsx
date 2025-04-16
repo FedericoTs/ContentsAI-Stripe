@@ -108,6 +108,13 @@ export default function LandingPage() {
     },
   };
 
+  const scrollToSection = (sectionId) => {
+    const section = document.getElementById(sectionId);
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden">
       {/* Animated background gradient */}
@@ -132,7 +139,10 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-20 items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Link to="/" className="flex items-center space-x-2">
+              <div
+                onClick={() => scrollToSection("hero")}
+                className="flex items-center space-x-2 cursor-pointer"
+              >
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg blur-sm opacity-70 animate-pulse" />
                   <div className="relative bg-black/50 backdrop-blur-md rounded-lg p-1.5 border border-white/10">
@@ -142,35 +152,33 @@ export default function LandingPage() {
                 <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
                   ContentSphere
                 </span>
-              </Link>
+              </div>
             </div>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-1">
-              <Link to="#features">
-                <Button
-                  variant="ghost"
-                  className="text-white/70 hover:text-white hover:bg-white/10"
-                >
-                  Features
-                </Button>
-              </Link>
-              <Link to="#pricing">
-                <Button
-                  variant="ghost"
-                  className="text-white/70 hover:text-white hover:bg-white/10"
-                >
-                  Pricing
-                </Button>
-              </Link>
-              <Link to="#testimonials">
-                <Button
-                  variant="ghost"
-                  className="text-white/70 hover:text-white hover:bg-white/10"
-                >
-                  Testimonials
-                </Button>
-              </Link>
+              <Button
+                variant="ghost"
+                className="text-white/70 hover:text-white hover:bg-white/10"
+                onClick={() => scrollToSection("features")}
+              >
+                Features
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="text-white/70 hover:text-white hover:bg-white/10"
+                onClick={() => scrollToSection("testimonials")}
+              >
+                Testimonials
+              </Button>
+              <Button
+                variant="ghost"
+                className="text-white/70 hover:text-white hover:bg-white/10"
+                onClick={() => scrollToSection("pricing")}
+              >
+                Pricing
+              </Button>
               <Link to="/docs">
                 <Button
                   variant="ghost"
@@ -281,33 +289,36 @@ export default function LandingPage() {
               className="md:hidden bg-black/90 backdrop-blur-xl border-t border-white/10"
             >
               <div className="container mx-auto px-4 py-4 space-y-4">
-                <Link to="#features" onClick={() => setMobileMenuOpen(false)}>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start text-white/70 hover:text-white hover:bg-white/10"
-                  >
-                    Features
-                  </Button>
-                </Link>
-                <Link to="#pricing" onClick={() => setMobileMenuOpen(false)}>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start text-white/70 hover:text-white hover:bg-white/10"
-                  >
-                    Pricing
-                  </Button>
-                </Link>
-                <Link
-                  to="#testimonials"
-                  onClick={() => setMobileMenuOpen(false)}
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-white/70 hover:text-white hover:bg-white/10"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    scrollToSection("features");
+                  }}
                 >
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start text-white/70 hover:text-white hover:bg-white/10"
-                  >
-                    Testimonials
-                  </Button>
-                </Link>
+                  Features
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-white/70 hover:text-white hover:bg-white/10"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    scrollToSection("pricing");
+                  }}
+                >
+                  Pricing
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-white/70 hover:text-white hover:bg-white/10"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    scrollToSection("testimonials");
+                  }}
+                >
+                  Testimonials
+                </Button>
                 <Link to="/docs" onClick={() => setMobileMenuOpen(false)}>
                   <Button
                     variant="ghost"
@@ -362,7 +373,10 @@ export default function LandingPage() {
       </header>
       <main>
         {/* Hero Section */}
-        <section className="relative pt-32 pb-16 md:pt-40 md:pb-24 overflow-hidden">
+        <section
+          id="hero"
+          className="relative pt-32 pb-16 md:pt-40 md:pb-24 overflow-hidden"
+        >
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               variants={staggerContainerVariant}
