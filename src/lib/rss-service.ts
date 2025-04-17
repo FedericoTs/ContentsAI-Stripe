@@ -156,6 +156,13 @@ async function processNewFeedItems(
         item.description ||
         "";
 
+      // Check if content appears to be truncated
+      const isTruncated =
+        content.includes("[&#8230;") ||
+        content.includes("[…") ||
+        content.includes("[...]") ||
+        content.endsWith("...");
+
       // Classify the content using AI if content is not empty
       let aiCategories: string[] = [];
       let aiSummary: string = "";
@@ -175,21 +182,48 @@ async function processNewFeedItems(
       }
 
       // Add the article to the database
-      await supabase.from("rss_articles").insert({
-        feed_id: feedId,
-        title: item.title || "Untitled",
-        description: item.contentSnippet || item.description || "",
-        content: content,
-        link: item.link || "",
-        guid: item.guid || item.link,
-        published_at: item.pubDate
-          ? new Date(item.pubDate).toISOString()
-          : null,
-        author: item.creator || item.author || "",
-        categories: item.categories || [],
-        ai_categories: aiCategories,
-        ai_summary: aiSummary,
-      });
+      const { data: newArticle } = await supabase
+        .from("rss_articles")
+        .insert({
+          feed_id: feedId,
+          title: item.title || "Untitled",
+          description: item.contentSnippet || item.description || "",
+          content: content,
+          link: item.link || "",
+          guid: item.guid || item.link,
+          published_at: item.pubDate
+            ? new Date(item.pubDate).toISOString()
+            : null,
+          author: item.creator || item.author || "",
+          categories: item.categories || [],
+          ai_categories: aiCategories,
+          ai_summary: aiSummary,
+          full_content_fetched: !isTruncated && content.length > 500, // Mark as full content if it's substantial and not truncated
+          last_updated_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      // If content appears truncated and we have a link, schedule full content fetch
+      if (newArticle && (isTruncated || content.length < 500) && item.link) {
+        try {
+          // Queue the full content fetch in the background
+          setTimeout(async () => {
+            try {
+              await supabase.functions.invoke(
+                "supabase-functions-fetch-full-article",
+                {
+                  body: { articleId: newArticle.id, url: item.link },
+                },
+              );
+            } catch (fetchError) {
+              console.error("Error fetching full article content:", fetchError);
+            }
+          }, 100); // Small delay to not block the main process
+        } catch (error) {
+          console.error("Error scheduling full content fetch:", error);
+        }
+      }
     }
 
     // Update the last_fetched_at timestamp
