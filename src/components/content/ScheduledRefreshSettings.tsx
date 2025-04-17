@@ -176,6 +176,9 @@ const ScheduledRefreshSettings: React.FC = () => {
   const triggerCleanup = async () => {
     setIsCleanupLoading(true);
     try {
+      // Add error handling and logging
+      console.log("Triggering cleanup with days:", cleanupDays);
+
       const { data, error } = await supabase.functions.invoke(
         "supabase-functions-cleanup-old-articles",
         {
@@ -183,7 +186,11 @@ const ScheduledRefreshSettings: React.FC = () => {
         },
       );
 
-      if (error) throw error;
+      console.log("Cleanup response:", data);
+      if (error) {
+        console.error("Cleanup function error:", error);
+        throw error;
+      }
 
       toast({
         title: "Cleanup Complete",

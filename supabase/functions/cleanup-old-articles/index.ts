@@ -14,10 +14,20 @@ Deno.serve(async (req) => {
 
   try {
     // Create a Supabase client with the service role key
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") || "",
-      Deno.env.get("SERVICE_ROLE_KEY") || "",
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_KEY") || "";
+
+    console.log(
+      `Initializing Supabase client with URL: ${supabaseUrl.substring(0, 10)}...`,
     );
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error(
+        "Missing required environment variables: SUPABASE_URL or SUPABASE_SERVICE_KEY",
+      );
+    }
+
+    const supabaseAdmin = createClient(supabaseUrl, supabaseKey);
 
     // Get days parameter from request or default to 30
     const { days = 30, dryRun = false } = await req.json();
@@ -27,13 +37,15 @@ Deno.serve(async (req) => {
     thresholdDate.setDate(thresholdDate.getDate() - days);
     const thresholdDateString = thresholdDate.toISOString();
 
+    console.log(`Checking for articles older than ${thresholdDateString}`);
+
     // First, count how many articles will be deleted
     const { count, error: countError } = await supabaseAdmin
       .from("rss_articles")
       .select("*", { count: "exact", head: true })
       .lt("published_at", thresholdDateString)
       .eq("saved", false)
-      .eq("transformed", false);
+      .is("transformed", null);
 
     if (countError) {
       throw countError;
@@ -43,12 +55,13 @@ Deno.serve(async (req) => {
 
     // If not a dry run, actually delete the articles
     if (!dryRun) {
+      console.log(`Attempting to delete ${count} articles`);
       const { error: deleteError } = await supabaseAdmin
         .from("rss_articles")
         .delete()
         .lt("published_at", thresholdDateString)
         .eq("saved", false)
-        .eq("transformed", false);
+        .is("transformed", null);
 
       if (deleteError) {
         throw deleteError;

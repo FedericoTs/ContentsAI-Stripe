@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
     // Create a Supabase client with the service role key
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") || "",
-      Deno.env.get("SERVICE_ROLE_KEY") || "",
+      Deno.env.get("SUPABASE_SERVICE_KEY") || "",
     );
 
     // Try to extract the full article content using article-extractor
