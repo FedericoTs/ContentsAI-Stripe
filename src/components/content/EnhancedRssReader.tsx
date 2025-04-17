@@ -26,11 +26,13 @@ import { useToast } from "@/components/ui/use-toast";
 interface EnhancedRssReaderProps {
   feedId: string | null;
   onBack?: () => void;
+  showSavedOnly?: boolean;
 }
 
 const EnhancedRssReader: React.FC<EnhancedRssReaderProps> = ({
   feedId,
   onBack,
+  showSavedOnly = false,
 }) => {
   const { toast } = useToast();
   const [articles, setArticles] = useState<any[]>([]);
@@ -38,11 +40,11 @@ const EnhancedRssReader: React.FC<EnhancedRssReaderProps> = ({
   const [selectedArticle, setSelectedArticle] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
-  const [showSavedOnly, setShowSavedOnly] = useState(false);
+  const [filterSavedOnly, setFilterSavedOnly] = useState(showSavedOnly);
   const [viewMode, setViewMode] = useState<"grid" | "detail">("grid");
   const [selectedArticleIndex, setSelectedArticleIndex] = useState<number>(-1);
 
-  // Fetch articles when feedId changes
+  // Fetch articles when feedId or showSavedOnly changes
   useEffect(() => {
     if (feedId) {
       fetchArticles(feedId);
@@ -50,6 +52,11 @@ const EnhancedRssReader: React.FC<EnhancedRssReaderProps> = ({
       fetchAllArticles();
     }
   }, [feedId]);
+
+  // Initialize filterSavedOnly when showSavedOnly prop changes
+  useEffect(() => {
+    setFilterSavedOnly(showSavedOnly);
+  }, [showSavedOnly]);
 
   // Fetch articles for a specific feed
   const fetchArticles = async (feedId: string) => {
@@ -195,7 +202,7 @@ const EnhancedRssReader: React.FC<EnhancedRssReaderProps> = ({
     const matchesUnread = !showUnreadOnly || !article.read;
 
     // Saved filter
-    const matchesSaved = !showSavedOnly || article.saved;
+    const matchesSaved = !filterSavedOnly || article.saved;
 
     return matchesSearch && matchesUnread && matchesSaved;
   });
@@ -286,10 +293,10 @@ const EnhancedRssReader: React.FC<EnhancedRssReaderProps> = ({
             Unread Only
           </Button>
           <Button
-            variant={showSavedOnly ? "default" : "outline"}
+            variant={filterSavedOnly ? "default" : "outline"}
             size="sm"
             className="text-xs h-8"
-            onClick={() => setShowSavedOnly(!showSavedOnly)}
+            onClick={() => setFilterSavedOnly(!filterSavedOnly)}
           >
             <BookmarkCheck className="h-3 w-3 mr-1" />
             Saved Only
@@ -300,10 +307,10 @@ const EnhancedRssReader: React.FC<EnhancedRssReaderProps> = ({
       {/* Content based on view mode */}
       {viewMode === "grid" ? (
         <ArticleGrid
-          articles={filteredArticles}
-          onSelectArticle={handleSelectArticle}
-          onSaveArticle={handleSaveArticle}
-          selectedArticle={selectedArticle}
+          items={filteredArticles}
+          onSelectItem={handleSelectArticle}
+          onSaveItem={handleSaveArticle}
+          selectedItem={selectedArticle}
           isLoading={isLoading}
         />
       ) : (

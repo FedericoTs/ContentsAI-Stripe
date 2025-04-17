@@ -9,15 +9,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import RssFeedTab from "../content/RssFeedTab";
+import PersonalCollectionTab from "../content/PersonalCollectionTab";
+import ApiAccessManager from "../content/ApiAccessManager";
+import { Shield } from "lucide-react";
 
 const Content = () => {
   const [transformationType, setTransformationType] = useState("text-to-image");
-  const [activeTab, setActiveTab] = useState("transform"); // transform, rss, personal
+  const [activeTab, setActiveTab] = useState("transform"); // transform, rss, personal, api
 
   return (
     <>
       {/* Tabs for different content sections */}
-      <div className="flex space-x-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-6">
         <Button
           variant={activeTab === "transform" ? "default" : "outline"}
           onClick={() => setActiveTab("transform")}
@@ -36,21 +39,24 @@ const Content = () => {
         >
           Personal Collection
         </Button>
+        <Button
+          variant={activeTab === "api" ? "default" : "outline"}
+          onClick={() => setActiveTab("api")}
+          className="flex items-center gap-1"
+        >
+          <Shield className="h-4 w-4" />
+          API Access
+        </Button>
       </div>
 
       {/* RSS Feed Tab Content */}
       {activeTab === "rss" && <RssFeedTab />}
 
       {/* Personal Collection Tab Content */}
-      {activeTab === "personal" && (
-        <div className="p-6 rounded-lg border border-gray-800 bg-gray-900/50">
-          <h2 className="text-xl font-semibold mb-4">Personal Collection</h2>
-          <p className="text-gray-400">
-            Import and manage your personal content collection.
-          </p>
-          {/* Personal collection content will go here */}
-        </div>
-      )}
+      {activeTab === "personal" && <PersonalCollectionTab />}
+
+      {/* API Access Manager Tab Content */}
+      {activeTab === "api" && <ApiAccessManager />}
 
       {/* Content Transformation Tab Content */}
       {activeTab === "transform" && (

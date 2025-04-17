@@ -1,22 +1,24 @@
 import React from "react";
-import ArticleCard from "./ArticleCard";
+import ContentCard from "./ContentCard";
 import { Button } from "@/components/ui/button";
 import { BookOpen, BookmarkCheck } from "lucide-react";
 
 interface ArticleGridProps {
-  articles: any[];
-  onSelectArticle: (article: any) => void;
-  onSaveArticle: (article: any, isSaved: boolean) => void;
-  selectedArticle: any | null;
+  items: any[]; // Unified prop for both articles and external content
+  onSelectItem: (item: any) => void;
+  onSaveItem: (item: any, isSaved: boolean) => void;
+  selectedItem: any | null;
   isLoading?: boolean;
+  title?: string; // Optional title for the grid
 }
 
 const ArticleGrid: React.FC<ArticleGridProps> = ({
-  articles,
-  onSelectArticle,
-  onSaveArticle,
-  selectedArticle,
+  items,
+  onSelectItem,
+  onSaveItem,
+  selectedItem,
   isLoading = false,
+  title,
 }) => {
   if (isLoading) {
     return (
@@ -36,15 +38,15 @@ const ArticleGrid: React.FC<ArticleGridProps> = ({
     );
   }
 
-  if (articles.length === 0) {
+  if (items.length === 0) {
     return (
       <div className="text-center py-12 border border-dashed border-gray-700 rounded-md">
         <BookOpen className="h-12 w-12 mx-auto text-gray-400 mb-4" />
         <h3 className="text-xl font-medium text-gray-300 mb-2">
-          No Articles Found
+          No Content Found
         </h3>
         <p className="text-gray-400">
-          Try adjusting your filters or add more RSS feeds
+          Try adjusting your filters or add more content sources
         </p>
       </div>
     );
@@ -54,7 +56,7 @@ const ArticleGrid: React.FC<ArticleGridProps> = ({
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">
-          {articles.length} Article{articles.length !== 1 ? "s" : ""}
+          {title || `${items.length} Item${items.length !== 1 ? "s" : ""}`}
         </h3>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="text-xs">
@@ -69,13 +71,13 @@ const ArticleGrid: React.FC<ArticleGridProps> = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {articles.map((article) => (
-          <ArticleCard
-            key={article.id}
-            article={article}
-            onSelect={onSelectArticle}
-            onSave={onSaveArticle}
-            isSelected={selectedArticle?.id === article.id}
+        {items.map((item) => (
+          <ContentCard
+            key={item.id}
+            item={item}
+            onSelect={onSelectItem}
+            onSave={onSaveItem}
+            isSelected={selectedItem?.id === item.id}
           />
         ))}
       </div>

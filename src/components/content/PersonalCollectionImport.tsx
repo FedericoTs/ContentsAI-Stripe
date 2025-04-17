@@ -9,25 +9,64 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import {
+  FileText,
+  Youtube,
+  Linkedin,
+  Facebook,
+  Rss,
+  Loader2,
+  X,
+} from "lucide-react";
+import {
+  fetchWordpressContent,
+  fetchYoutubeContent,
+  fetchLinkedinContent,
+  fetchFacebookContent,
+  saveExternalContent,
+} from "@/lib/external-content-service";
+import { useToast } from "@/components/ui/use-toast";
 
 interface PersonalCollectionImportProps {
-  onImport: (content: string) => void;
+  onImportComplete?: () => void;
   onClose: () => void;
 }
 
 const PersonalCollectionImport = ({
-  onImport,
+  onImportComplete,
   onClose,
 }: PersonalCollectionImportProps) => {
+  const { toast } = useToast();
   const [importSource, setImportSource] = useState<string>("rss");
   const [url, setUrl] = useState<string>("");
   const [apiKey, setApiKey] = useState<string>("");
+  const [channelId, setChannelId] = useState<string>("");
+  const [accessToken, setAccessToken] = useState<string>("");
+  const [contentType, setContentType] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
 
   const handleImport = async () => {
-    if (!url) {
+    if (!url && importSource !== "linkedin" && importSource !== "facebook") {
       setError("Please enter a valid URL");
+      return;
+    }
+
+    if (
+      (importSource === "linkedin" || importSource === "facebook") &&
+      !accessToken
+    ) {
+      setError("Please enter an access token");
+      return;
+    }
+
+    if (importSource === "youtube" && !apiKey) {
+      setError("Please enter an API key");
+      return;
+    }
+
+    if (importSource === "youtube" && !channelId) {
+      setError("Please enter a channel ID");
       return;
     }
 
@@ -35,15 +74,95 @@ const PersonalCollectionImport = ({
     setError("");
 
     try {
-      // This is a placeholder for the actual API integration
-      // In a real implementation, this would make API calls to the respective services
-      setTimeout(() => {
-        const mockContent = `Imported content from ${importSource}: ${url}`;
-        onImport(mockContent);
-        setLoading(false);
-      }, 1000);
-    } catch (err) {
-      setError("Failed to import content. Please try again.");
+      let result;
+
+      switch (importSource) {
+        case "rss":
+          // This would be handled by the RSS service
+          toast({
+            title: "RSS Import",
+            description: "RSS feeds are handled in the RSS section",
+          });
+          break;
+
+        case "wordpress":
+          result = await fetchWordpressContent(url);
+          if (result.success && result.data) {
+            // Save each content item to the database
+            for (const item of result.data) {
+              await saveExternalContent(item);
+            }
+            toast({
+              title: "WordPress Import Successful",
+              description: `Imported ${result.data.length} items from WordPress`,
+            });
+          } else {
+            throw new Error(
+              result.error || "Failed to import WordPress content",
+            );
+          }
+          break;
+
+        case "youtube":
+          result = await fetchYoutubeContent(apiKey, channelId);
+          if (result.success && result.data) {
+            // Save each content item to the database
+            for (const item of result.data) {
+              await saveExternalContent(item);
+            }
+            toast({
+              title: "YouTube Import Successful",
+              description: `Imported ${result.data.length} videos from YouTube`,
+            });
+          } else {
+            throw new Error(result.error || "Failed to import YouTube content");
+          }
+          break;
+
+        case "linkedin":
+          result = await fetchLinkedinContent(accessToken);
+          if (result.success) {
+            toast({
+              title: "LinkedIn Import",
+              description:
+                result.message ||
+                "LinkedIn integration requires a LinkedIn Developer account",
+            });
+          } else {
+            throw new Error(
+              result.error || "Failed to import LinkedIn content",
+            );
+          }
+          break;
+
+        case "facebook":
+          result = await fetchFacebookContent(accessToken);
+          if (result.success) {
+            toast({
+              title: "Facebook Import",
+              description:
+                result.message ||
+                "Facebook integration requires a Facebook Developer account",
+            });
+          } else {
+            throw new Error(
+              result.error || "Failed to import Facebook content",
+            );
+          }
+          break;
+      }
+
+      if (onImportComplete) {
+        onImportComplete();
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to import content. Please try again.");
+      toast({
+        title: "Import Failed",
+        description: err.message || "Failed to import content",
+        variant: "destructive",
+      });
+    } finally {
       setLoading(false);
     }
   };
@@ -55,29 +174,27 @@ const PersonalCollectionImport = ({
           Import from Personal Collection
         </h2>
         <Button variant="ghost" size="sm" onClick={onClose}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-4 w-4"
-          >
-            <path d="M18 6 6 18" />
-            <path d="m6 6 12 12" />
-          </svg>
+          <X className="h-4 w-4" />
         </Button>
       </div>
 
       <Tabs defaultValue="rss" onValueChange={setImportSource}>
         <TabsList className="bg-gray-800 border border-gray-700 mb-4">
-          <TabsTrigger value="rss">RSS Feed</TabsTrigger>
-          <TabsTrigger value="wordpress">WordPress</TabsTrigger>
-          <TabsTrigger value="youtube">YouTube</TabsTrigger>
+          <TabsTrigger value="rss" className="flex items-center">
+            <Rss className="h-4 w-4 mr-2" /> RSS Feed
+          </TabsTrigger>
+          <TabsTrigger value="wordpress" className="flex items-center">
+            <FileText className="h-4 w-4 mr-2" /> WordPress
+          </TabsTrigger>
+          <TabsTrigger value="youtube" className="flex items-center">
+            <Youtube className="h-4 w-4 mr-2" /> YouTube
+          </TabsTrigger>
+          <TabsTrigger value="linkedin" className="flex items-center">
+            <Linkedin className="h-4 w-4 mr-2" /> LinkedIn
+          </TabsTrigger>
+          <TabsTrigger value="facebook" className="flex items-center">
+            <Facebook className="h-4 w-4 mr-2" /> Facebook
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="rss" className="space-y-4">
@@ -110,7 +227,7 @@ const PersonalCollectionImport = ({
             <label className="block text-sm font-medium mb-2">
               Content Type
             </label>
-            <Select>
+            <Select value={contentType} onValueChange={setContentType}>
               <SelectTrigger className="bg-gray-800 border-gray-700">
                 <SelectValue placeholder="Select content type" />
               </SelectTrigger>
@@ -126,18 +243,18 @@ const PersonalCollectionImport = ({
         <TabsContent value="youtube" className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">
-              YouTube Channel URL
+              YouTube Channel URL or ID
             </label>
             <Input
-              placeholder="https://youtube.com/c/channelname"
+              placeholder="https://youtube.com/c/channelname or channel ID"
               className="bg-gray-800 border-gray-700"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
+              value={channelId}
+              onChange={(e) => setChannelId(e.target.value)}
             />
           </div>
           <div>
             <label className="block text-sm font-medium mb-2">
-              API Key (optional)
+              API Key (required)
             </label>
             <Input
               placeholder="Your YouTube API Key"
@@ -151,7 +268,7 @@ const PersonalCollectionImport = ({
             <label className="block text-sm font-medium mb-2">
               Content Type
             </label>
-            <Select>
+            <Select value={contentType} onValueChange={setContentType}>
               <SelectTrigger className="bg-gray-800 border-gray-700">
                 <SelectValue placeholder="Select content type" />
               </SelectTrigger>
@@ -161,6 +278,72 @@ const PersonalCollectionImport = ({
                 <SelectItem value="livestreams">Livestreams</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="linkedin" className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              LinkedIn Access Token
+            </label>
+            <Input
+              placeholder="Your LinkedIn API Access Token"
+              className="bg-gray-800 border-gray-700"
+              value={accessToken}
+              onChange={(e) => setAccessToken(e.target.value)}
+              type="password"
+            />
+          </div>
+          <div className="p-3 bg-blue-900/20 rounded-md border border-blue-500/20 text-sm">
+            <p>
+              LinkedIn API integration requires a LinkedIn Developer account and
+              approved application.
+            </p>
+            <p className="mt-2">
+              For more information, visit the{" "}
+              <a
+                href="https://developer.linkedin.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:underline"
+              >
+                LinkedIn Developer Portal
+              </a>
+              .
+            </p>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="facebook" className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Facebook Access Token
+            </label>
+            <Input
+              placeholder="Your Facebook API Access Token"
+              className="bg-gray-800 border-gray-700"
+              value={accessToken}
+              onChange={(e) => setAccessToken(e.target.value)}
+              type="password"
+            />
+          </div>
+          <div className="p-3 bg-blue-900/20 rounded-md border border-blue-500/20 text-sm">
+            <p>
+              Facebook API integration requires a Facebook Developer account and
+              approved application.
+            </p>
+            <p className="mt-2">
+              For more information, visit the{" "}
+              <a
+                href="https://developers.facebook.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:underline"
+              >
+                Facebook Developer Portal
+              </a>
+              .
+            </p>
           </div>
         </TabsContent>
       </Tabs>
@@ -175,26 +358,7 @@ const PersonalCollectionImport = ({
         >
           {loading ? (
             <>
-              <svg
-                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
+              <Loader2 className="animate-spin mr-2 h-4 w-4" />
               Importing...
             </>
           ) : (
