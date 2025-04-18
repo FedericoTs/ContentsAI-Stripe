@@ -54,7 +54,19 @@ export default function PricingSection() {
         }
 
         if (data) {
-          setPlans(data);
+          console.log("Fetched plans from Stripe:", data);
+          // Transform the data to match the Plan interface
+          const formattedPlans = data.map((plan) => ({
+            id: plan.id,
+            product: plan.product_name || plan.product,
+            name: plan.product_name || "",
+            description: plan.product_description || "",
+            price: plan.amount,
+            currency: plan.currency,
+            interval: plan.interval,
+            amount: plan.amount,
+          }));
+          setPlans(formattedPlans);
         }
       } catch (error) {
         console.error("Error fetching plans:", error);
@@ -219,6 +231,15 @@ export default function PricingSection() {
   // Use placeholder plans if no plans are loaded
   const plansToDisplay = plans.length > 0 ? plans : placeholderPlans;
 
+  // Log the plans being displayed
+  useEffect(() => {
+    if (plans.length > 0) {
+      console.log("Using real plans from Stripe:", plans);
+    } else {
+      console.log("Using placeholder plans");
+    }
+  }, [plans]);
+
   // Reorder the plans to swap first and last, keeping the middle one in place
   const displayPlans =
     plansToDisplay.length === 3
@@ -359,7 +380,7 @@ export default function PricingSection() {
                       <div className="mb-6">
                         <span className="text-4xl font-bold text-white">
                           {formatCurrency(
-                            plan.amount || plan.price,
+                            plan.amount || plan.price || 0,
                             plan.currency,
                           )}
                         </span>

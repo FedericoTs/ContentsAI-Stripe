@@ -109,7 +109,10 @@ interface ContentItem {
 
 const ContentTransformationTab: React.FC = () => {
   const { toast } = useToast();
-  const { hasBusinessPlan } = useAuth();
+  // Provide a default implementation when not within AuthProvider
+  const { hasBusinessPlan = () => false } = useAuth
+    ? useAuth()
+    : { hasBusinessPlan: () => false };
   const [transformationType, setTransformationType] =
     useState<TransformationType>("text-to-image");
   const [contentSource, setContentSource] = useState<ContentSource>("manual");

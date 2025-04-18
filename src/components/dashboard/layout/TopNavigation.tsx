@@ -33,7 +33,7 @@ const TopNavigation = ({
     { id: "2", title: "Meeting reminder" },
   ],
 }: TopNavigationProps) => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, subscriptionStatus } = useAuth();
 
   if (!user) return null;
 
@@ -134,18 +134,61 @@ const TopNavigation = ({
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
-            className="w-56 bg-black/80 backdrop-blur-md border-white/10 text-white"
+            className="w-64 bg-black/80 backdrop-blur-md border-white/10 text-white"
           >
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator className="bg-white/10" />
-            <DropdownMenuItem className="py-2 text-white/70 hover:text-white hover:bg-purple-500/30">
-              <User className="mr-2 h-4 w-4" />
-              Profile
+            <DropdownMenuItem
+              className="py-2 text-white/70 hover:text-white hover:bg-purple-500/30"
+              asChild
+            >
+              <Link to="/profile">
+                <User className="mr-2 h-4 w-4" />
+                Profile
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem className="py-2 text-white/70 hover:text-white hover:bg-purple-500/30">
               <Settings className="mr-2 h-4 w-4" />
               Settings
             </DropdownMenuItem>
+
+            <DropdownMenuSeparator className="bg-white/10" />
+
+            <DropdownMenuLabel className="text-xs text-white/50">
+              Subscription Status
+            </DropdownMenuLabel>
+            <div className="px-2 py-1 text-sm">
+              {subscriptionStatus.isActive ? (
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center">
+                    <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+                    <span className="text-green-400 font-medium">
+                      {subscriptionStatus.trialActive
+                        ? "Trial Active"
+                        : "Active Subscription"}
+                    </span>
+                  </div>
+                  <div className="text-xs text-white/60 pl-4">
+                    {subscriptionStatus.currentPeriodEnd ? (
+                      <span>
+                        Renews:{" "}
+                        {new Date(
+                          subscriptionStatus.currentPeriodEnd * 1000,
+                        ).toLocaleDateString()}
+                      </span>
+                    ) : (
+                      <span>Manage your subscription in profile</span>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center">
+                  <span className="inline-block w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>
+                  <span className="text-yellow-400">Free Plan</span>
+                </div>
+              )}
+            </div>
+
             <DropdownMenuSeparator className="bg-white/10" />
             <DropdownMenuItem
               onSelect={() => signOut()}

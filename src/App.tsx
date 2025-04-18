@@ -11,6 +11,7 @@ import Team from "./components/pages/team";
 import Content from "./components/pages/content";
 import Archive from "./components/pages/archive";
 import Schedule from "./components/pages/schedule";
+import Profile from "./components/pages/profile";
 import { AuthProvider, useAuth } from "../supabase/auth";
 import { Toaster } from "./components/ui/toaster";
 import DashboardLayout from "./components/dashboard/layout/DashboardLayout";
@@ -68,6 +69,7 @@ function AppRoutes() {
           <Route path="content" element={<Content />} />
           <Route path="archive" element={<Archive />} />
           <Route path="schedule" element={<Schedule />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
 
         {/* Add a route for Tempo storyboards if in Tempo environment */}
