@@ -35,6 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Function to check subscription status
   const checkSubscriptionStatus = async (userId: string) => {
     try {
+      console.log("Checking subscription status for user:", userId);
       const { data: subscriptions, error } = await supabase
         .from("subscriptions")
         .select("*")
@@ -52,6 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const subscription = subscriptions?.[0];
 
       if (subscription) {
+        console.log("Found subscription:", subscription);
         // Check if subscription is active
         const isActive =
           subscription.status === "active" &&
@@ -62,12 +64,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           subscription.status === "trialing" ||
           (subscription.trial_end && subscription.trial_end > now);
 
+        console.log("Subscription status:", {
+          isActive,
+          trialActive,
+          currentPeriodEnd: subscription.current_period_end,
+        });
+
         setSubscriptionStatus({
           isActive,
           trialActive,
           currentPeriodEnd: subscription.current_period_end,
         });
       } else {
+        console.log("No active subscription found for user");
         setSubscriptionStatus({
           isActive: false,
           trialActive: false,
@@ -286,11 +295,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Export as a named function declaration for Fast Refresh compatibility
-export function useAuth() {
+// Define useAuth as a named arrow function for Fast Refresh compatibility
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-}
+};

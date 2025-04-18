@@ -184,11 +184,72 @@ async function handleSubscriptionCreated(supabaseClient: any, event: any) {
     );
   }
 
-  // Update user's subscription status in the users table
+  // Extract plan information from the subscription
+  const planId = subscription.items.data[0]?.price.id;
+  let planName = "";
+  let planType = "";
+
+  // Try to get plan name from metadata
+  if (subscription.metadata?.product_name) {
+    planName = subscription.metadata.product_name;
+  }
+
+  // If not in metadata, try to get from the plans table
+  if (!planName) {
+    try {
+      const { data: planData, error: planError } = await supabaseClient
+        .from("plans")
+        .select("name, product_name, type")
+        .eq("id", planId)
+        .maybeSingle();
+
+      if (!planError && planData) {
+        planName = planData.name || planData.product_name || "";
+        planType = planData.type || "";
+        console.log("Found plan details from plans table:", {
+          planName,
+          planType,
+        });
+      }
+    } catch (planLookupError) {
+      console.error("Error looking up plan details:", planLookupError);
+    }
+  }
+
+  // If still no plan name, create a generic one based on price
+  if (!planName) {
+    const priceData = subscription.items.data[0]?.price;
+    if (priceData) {
+      const amount = priceData.unit_amount ? priceData.unit_amount / 100 : 0;
+      const currency = priceData.currency?.toUpperCase() || "USD";
+      const interval = priceData.recurring?.interval || "month";
+      planName = `${currency} ${amount}/${interval}`;
+      planType = amount > 50 ? "business" : "standard";
+    } else {
+      planName = "Subscription Plan";
+      planType = "standard";
+    }
+  }
+
+  // Update user's subscription status and plan information in the users table
   try {
+    console.log("Updating user record with plan information:", {
+      userId,
+      subscription_status: subscription.status,
+      plan_id: planId,
+      plan_name: planName,
+      plan_type: planType,
+    });
+
     const { error: userUpdateError } = await supabaseClient
       .from("users")
-      .update({ subscription_status: subscription.status })
+      .update({
+        subscription_status: subscription.status,
+        plan_id: planId,
+        plan_name: planName,
+        plan_type: planType,
+        subscription_updated_at: new Date().toISOString(),
+      })
       .eq("id", userId);
 
     if (userUpdateError) {
@@ -196,6 +257,8 @@ async function handleSubscriptionCreated(supabaseClient: any, event: any) {
         "Error updating user subscription status:",
         userUpdateError,
       );
+    } else {
+      console.log("Successfully updated user with plan information");
     }
   } catch (userUpdateErr) {
     console.error(
@@ -259,15 +322,74 @@ async function handleSubscriptionUpdated(supabaseClient: any, event: any) {
   // Also update the user's subscription status if we have a user_id
   if (userId) {
     try {
+      // Extract plan information from the subscription
+      const planId = subscription.items.data[0]?.price.id;
+      let planName = "";
+      let planType = "";
+
+      // Try to get plan name from metadata
+      if (subscription.metadata?.product_name) {
+        planName = subscription.metadata.product_name;
+      }
+
+      // If not in metadata, try to get from the plans table
+      if (!planName) {
+        try {
+          const { data: planData, error: planError } = await supabaseClient
+            .from("plans")
+            .select("name, product_name, type")
+            .eq("id", planId)
+            .maybeSingle();
+
+          if (!planError && planData) {
+            planName = planData.name || planData.product_name || "";
+            planType = planData.type || "";
+            console.log("Found plan details from plans table:", {
+              planName,
+              planType,
+            });
+          }
+        } catch (planLookupError) {
+          console.error("Error looking up plan details:", planLookupError);
+        }
+      }
+
+      // If still no plan name, create a generic one based on price
+      if (!planName) {
+        const priceData = subscription.items.data[0]?.price;
+        if (priceData) {
+          const amount = priceData.unit_amount
+            ? priceData.unit_amount / 100
+            : 0;
+          const currency = priceData.currency?.toUpperCase() || "USD";
+          const interval = priceData.recurring?.interval || "month";
+          planName = `${currency} ${amount}/${interval}`;
+          planType = amount > 50 ? "business" : "standard";
+        } else {
+          planName = "Subscription Plan";
+          planType = "standard";
+        }
+      }
+
       const { error: userUpdateError } = await supabaseClient
         .from("users")
-        .update({ subscription_status: subscription.status })
+        .update({
+          subscription_status: subscription.status,
+          plan_id: planId,
+          plan_name: planName,
+          plan_type: planType,
+          subscription_updated_at: new Date().toISOString(),
+        })
         .eq("id", userId);
 
       if (userUpdateError) {
         console.error(
           "Error updating user subscription status during update:",
           userUpdateError,
+        );
+      } else {
+        console.log(
+          "Successfully updated user with plan information during subscription update",
         );
       }
     } catch (userUpdateErr) {
@@ -307,15 +429,35 @@ async function handleSubscriptionDeleted(supabaseClient: any, event: any) {
     if (userId) {
       await supabaseClient
         .from("users")
-        .update({ subscription_status: "canceled" })
+        .update({
+          subscription_status: "canceled",
+          plan_id: null,
+          plan_name: null,
+          plan_type: null,
+          subscription_updated_at: new Date().toISOString(),
+        })
         .eq("id", userId);
+
+      console.log(
+        "Successfully cleared user plan information during subscription deletion",
+      );
     }
     // Fallback to email if user_id not available but email is in metadata
     else if (subscription?.metadata?.email) {
       await supabaseClient
         .from("users")
-        .update({ subscription_status: null })
+        .update({
+          subscription_status: null,
+          plan_id: null,
+          plan_name: null,
+          plan_type: null,
+          subscription_updated_at: new Date().toISOString(),
+        })
         .eq("email", subscription.metadata.email);
+
+      console.log(
+        "Successfully cleared user plan information by email during subscription deletion",
+      );
     }
 
     return new Response(
@@ -398,14 +540,13 @@ async function handleCheckoutSessionCompleted(supabaseClient: any, event: any) {
       JSON.stringify(updatedStripeSubscription.metadata, null, 2),
     );
 
+    // Get the user ID from session metadata
+    const userId = session.metadata?.userId || session.metadata?.user_id;
     console.log(
       "Attempting to update subscription in Supabase with stripe_id:",
       subscriptionId,
     );
-    console.log(
-      "User ID being set:",
-      session.metadata?.userId || session.metadata?.user_id,
-    );
+    console.log("User ID being set:", userId);
 
     const supabaseUpdateResult = await supabaseClient
       .from("subscriptions")
@@ -414,7 +555,7 @@ async function handleCheckoutSessionCompleted(supabaseClient: any, event: any) {
           ...session.metadata,
           checkoutSessionId: session.id,
         },
-        user_id: session.metadata?.userId || session.metadata?.user_id,
+        user_id: userId,
         status: stripeSubscription.status, // Update the status from Stripe
         current_period_start: stripeSubscription.current_period_start,
         current_period_end: stripeSubscription.current_period_end,
@@ -434,6 +575,89 @@ async function handleCheckoutSessionCompleted(supabaseClient: any, event: any) {
       );
       throw new Error(
         `Supabase update failed: ${supabaseUpdateResult.error.message}`,
+      );
+    }
+
+    // Extract plan information from the subscription
+    const planId = stripeSubscription.items.data[0]?.price.id;
+    let planName = "";
+    let planType = "";
+
+    // Try to get plan name from metadata
+    if (stripeSubscription.metadata?.product_name) {
+      planName = stripeSubscription.metadata.product_name;
+    }
+
+    // If not in metadata, try to get from the plans table
+    if (!planName) {
+      try {
+        const { data: planData, error: planError } = await supabaseClient
+          .from("plans")
+          .select("name, product_name, type")
+          .eq("id", planId)
+          .maybeSingle();
+
+        if (!planError && planData) {
+          planName = planData.name || planData.product_name || "";
+          planType = planData.type || "";
+          console.log("Found plan details from plans table:", {
+            planName,
+            planType,
+          });
+        }
+      } catch (planLookupError) {
+        console.error("Error looking up plan details:", planLookupError);
+      }
+    }
+
+    // If still no plan name, create a generic one based on price
+    if (!planName) {
+      const priceData = stripeSubscription.items.data[0]?.price;
+      if (priceData) {
+        const amount = priceData.unit_amount ? priceData.unit_amount / 100 : 0;
+        const currency = priceData.currency?.toUpperCase() || "USD";
+        const interval = priceData.recurring?.interval || "month";
+        planName = `${currency} ${amount}/${interval}`;
+        planType = amount > 50 ? "business" : "standard";
+      } else {
+        planName = "Subscription Plan";
+        planType = "standard";
+      }
+    }
+
+    // Update the user record with plan information
+    if (userId) {
+      console.log("Updating user record with plan information:", {
+        userId,
+        subscription_status: stripeSubscription.status,
+        plan_id: planId,
+        plan_name: planName,
+        plan_type: planType,
+      });
+
+      const { error: userUpdateError } = await supabaseClient
+        .from("users")
+        .update({
+          subscription_status: stripeSubscription.status,
+          plan_id: planId,
+          plan_name: planName,
+          plan_type: planType,
+          subscription_updated_at: new Date().toISOString(),
+        })
+        .eq("id", userId);
+
+      if (userUpdateError) {
+        console.error(
+          "Error updating user with plan information:",
+          userUpdateError,
+        );
+        // Continue execution even if user update fails
+      } else {
+        console.log("Successfully updated user with plan information");
+      }
+    } else {
+      console.warn(
+        "No user ID found in session metadata, skipping user update",
       );
     }
 

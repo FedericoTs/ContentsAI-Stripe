@@ -1,5 +1,5 @@
 import React from "react";
-import { Bell, Home, Search, Settings, User } from "lucide-react";
+import { Bell, Home, Search, Settings, User, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "../../../../supabase/auth";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { applyTempoTheme } from "@/lib/tempo-theme";
 
 interface TopNavigationProps {
@@ -34,6 +34,7 @@ const TopNavigation = ({
   ],
 }: TopNavigationProps) => {
   const { user, signOut, subscriptionStatus } = useAuth();
+  const navigate = useNavigate();
 
   if (!user) return null;
 
@@ -54,6 +55,17 @@ const TopNavigation = ({
       </div>
 
       <div className="flex items-center gap-2">
+        {!subscriptionStatus.isActive && (
+          <Button
+            variant="default"
+            size="sm"
+            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+            onClick={() => navigate("/pricing")}
+          >
+            <CreditCard className="h-4 w-4 mr-2" />
+            Upgrade Plan
+          </Button>
+        )}
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>

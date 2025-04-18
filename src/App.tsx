@@ -19,9 +19,11 @@ import DashboardLayout from "./components/dashboard/layout/DashboardLayout";
 function PrivateRoute({
   children,
   path,
+  requireSubscription = true,
 }: {
   children: React.ReactNode;
   path?: string;
+  requireSubscription?: boolean;
 }) {
   const { user, loading, subscriptionStatus } = useAuth();
 
@@ -36,7 +38,14 @@ function PrivateRoute({
   // For debugging - log the subscription status
   console.log("Subscription status:", subscriptionStatus);
 
-  // Always allow access to protected routes
+  // Check if the user has an active subscription when required
+  if (requireSubscription && !subscriptionStatus.isActive) {
+    console.log(
+      "User does not have an active subscription, redirecting to pricing",
+    );
+    return <Navigate to="/pricing" />;
+  }
+
   return <>{children}</>;
 }
 
@@ -55,11 +64,23 @@ function AppRoutes() {
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/success" element={<Success />} />
 
-        {/* Dashboard layout with nested routes */}
+        {/* Profile route - accessible without subscription */}
+        <Route
+          path="/profile"
+          element={
+            <PrivateRoute requireSubscription={false}>
+              <DashboardLayout />
+            </PrivateRoute>
+          }
+        >
+          <Route index element={<Profile />} />
+        </Route>
+
+        {/* Dashboard layout with nested routes - requires subscription */}
         <Route
           path="/"
           element={
-            <PrivateRoute>
+            <PrivateRoute requireSubscription={true}>
               <DashboardLayout />
             </PrivateRoute>
           }
@@ -69,7 +90,6 @@ function AppRoutes() {
           <Route path="content" element={<Content />} />
           <Route path="archive" element={<Archive />} />
           <Route path="schedule" element={<Schedule />} />
-          <Route path="profile" element={<Profile />} />
         </Route>
 
         {/* Add a route for Tempo storyboards if in Tempo environment */}
