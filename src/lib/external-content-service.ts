@@ -1,13 +1,15 @@
 import { supabase } from "../../supabase/supabase";
 import axios from "axios";
 import { generateContent } from "./openai";
+import { User } from "@supabase/supabase-js";
 
 // Define content source types
 export type ContentSourceType =
   | "linkedin"
   | "facebook"
   | "wordpress"
-  | "youtube";
+  | "youtube"
+  | "manual";
 
 // Define common content interface
 export interface ExternalContent {
@@ -25,6 +27,7 @@ export interface ExternalContent {
   ai_categories?: string[];
   ai_summary?: string;
   metadata?: Record<string, any>;
+  saved?: boolean;
 }
 
 /**
@@ -254,7 +257,10 @@ export async function fetchYoutubeContent(
 /**
  * Save external content to the database
  */
-export async function saveExternalContent(content: ExternalContent) {
+export async function saveExternalContent(
+  content: ExternalContent,
+  userId?: string,
+) {
   try {
     // Classify the content using AI if content is not empty
     if (content.content && content.content.length > 10) {
@@ -291,6 +297,7 @@ export async function saveExternalContent(content: ExternalContent) {
           metadata: content.metadata || {},
           saved: true, // Mark as saved by default
           last_updated_at: new Date().toISOString(),
+          user_id: userId || (await supabase.auth.getUser()).data.user?.id,
         },
         { onConflict: "source_type,source_id" },
       )
@@ -314,10 +321,11 @@ export async function getAllExternalContent(
     limit?: number;
     offset?: number;
     source_type?: ContentSourceType;
+    userId?: string;
   } = {},
 ) {
   try {
-    const { limit = 20, offset = 0, source_type } = options;
+    const { limit = 20, offset = 0, source_type, userId } = options;
 
     let query = supabase
       .from("external_content")
@@ -327,6 +335,10 @@ export async function getAllExternalContent(
 
     if (source_type) {
       query = query.eq("source_type", source_type);
+    }
+
+    if (userId) {
+      query = query.eq("user_id", userId);
     }
 
     const { data, error } = await query;
@@ -390,8 +402,72 @@ async function classifyContent(title: string, content: string) {
 }
 
 /**
- * Mark external content as transformed
+ * Save transformed content to the database
  */
+export async function saveTransformedContent({
+  originalContentId,
+  transformationType,
+  resultData,
+  settings,
+  title,
+  description,
+  userId,
+}: {
+  originalContentId: string;
+  transformationType: string;
+  resultData: any;
+  settings?: any;
+  title?: string;
+  description?: string;
+  userId?: string;
+}) {
+  try {
+    const { data, error } = await supabase
+      .from("transformed_content")
+      .insert({
+        original_content_id: originalContentId,
+        transformation_type: transformationType,
+        result_data: resultData,
+        settings: settings || {},
+        title: title || "",
+        description: description || "",
+        user_id: userId || (await supabase.auth.getUser()).data.user?.id,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Also mark the original content as transformed
+    await markExternalContentAsTransformed(originalContentId);
+
+    return { success: true, data };
+  } catch (error) {
+    console.error("Error saving transformed content:", error);
+    return { success: false, error };
+  }
+}
+
+/**
+ * Get transformed content for a specific original content
+ */
+export async function getTransformedContent(originalContentId: string) {
+  try {
+    const { data, error } = await supabase
+      .from("transformed_content")
+      .select("*")
+      .eq("original_content_id", originalContentId)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    return { success: true, data };
+  } catch (error) {
+    console.error("Error fetching transformed content:", error);
+    return { success: false, error };
+  }
+}
+
 export async function markExternalContentAsTransformed(contentId: string) {
   try {
     const { error } = await supabase

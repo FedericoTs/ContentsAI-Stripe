@@ -15,6 +15,7 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
+  hasBusinessPlan: () => boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -139,9 +140,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   };
 
+  // Function to check if user has a Business Plan subscription
+  const hasBusinessPlan = () => {
+    // Check if user has an active subscription
+    if (!subscriptionStatus.isActive) return false;
+
+    // In a real implementation, you would check the specific plan ID or name
+    // For now, we'll assume any active subscription with a current period end date
+    // that's more than 30 days from now is a Business Plan
+    if (subscriptionStatus.currentPeriodEnd) {
+      const thirtyDaysFromNow =
+        Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
+      return subscriptionStatus.currentPeriodEnd > thirtyDaysFromNow;
+    }
+
+    return false;
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, loading, subscriptionStatus, signIn, signUp, signOut }}
+      value={{
+        user,
+        loading,
+        subscriptionStatus,
+        signIn,
+        signUp,
+        signOut,
+        hasBusinessPlan,
+      }}
     >
       {children}
     </AuthContext.Provider>
