@@ -33,6 +33,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Image as ImageIcon,
   FileText,
   Mic,
@@ -68,7 +74,11 @@ import {
   generateImagePrompt,
   textToSpeech as openAITextToSpeech,
   generateImage,
+  generateImageWithReferences,
 } from "@/lib/openai";
+import ReferenceImageUploader, {
+  ReferenceImageType,
+} from "./ReferenceImageUploader";
 import { useAuth } from "../../../supabase/auth";
 import { getAllUserArticles } from "@/lib/rss-service";
 import {
@@ -80,6 +90,7 @@ import {
 
 // Define the content source types
 type ContentSource = "manual" | "rss" | "external" | "api";
+type ContentSourceType = "manual" | "rss" | "external" | "api";
 type TransformationType =
   | "text-to-image"
   | "text-to-speech"
@@ -113,10 +124,13 @@ const ContentTransformationTab: React.FC = () => {
   const [transformationResult, setTransformationResult] = useState<any>(null);
 
   // Image transformation settings
-  const [imageStyle, setImageStyle] = useState("realistic");
+  const [imageStyle, setImageStyle] = useState("vivid");
   const [imageSize, setImageSize] = useState("1024x1024");
   const [imageCount, setImageCount] = useState("1");
   const [imageQuality, setImageQuality] = useState("standard");
+  const [referenceImages, setReferenceImages] = useState<ReferenceImageType[]>(
+    [],
+  );
 
   // Speech transformation settings
   const [voiceType, setVoiceType] = useState("male-1");
@@ -354,11 +368,35 @@ const ContentTransformationTab: React.FC = () => {
           ? inputContent.substring(0, 300) + "..."
           : inputContent;
 
-      // Generate enhanced prompts for better image generation
-      const enhancedPrompt = await generateContent(
-        `Create a detailed image generation prompt for DALL-E based on this content: "${contentSummary}". The image should be in ${imageStyle} style and suitable for professional marketing. Focus on creating a visually striking image that captures the essence of the content. Keep the prompt under 100 words.`,
-        { model: "gpt-4o", temperature: 0.7, maxTokens: 200 },
-      );
+      // Check if we have reference images to use
+      const hasReferenceImages = referenceImages.length > 0;
+      let enhancedPrompt = "";
+
+      if (hasReferenceImages) {
+        // Log that we're using reference images
+        console.log(
+          `Using ${referenceImages.length} reference images for generation`,
+        );
+
+        // We'll use the reference images directly with the generateImageWithReferences function
+        toast({
+          title: "Using Reference Images",
+          description:
+            "Generating images with your reference images for better results",
+        });
+      } else {
+        // Always generate enhanced prompts for better image generation
+        enhancedPrompt = await generateContent(
+          `Create a detailed image generation prompt for DALL-E based on this content: "${contentSummary}". The image should be in vivid style with rich colors and high contrast, suitable for professional marketing. Focus on creating a visually striking image that captures the essence of the content with bold visual elements.
+
+          Include cinematic terms to describe the scene (such as: wide-angle shot, close-up, aerial view, golden hour lighting, dramatic shadows, depth of field, etc.).
+          
+          Specify composition elements (such as: rule of thirds, leading lines, foreground interest, balanced framing, symmetry, etc.).
+          
+          Include specific details about lighting (dramatic, soft, backlit, etc.), atmosphere, and focal points. Keep the prompt under 100 words.`,
+          { model: "gpt-4o", temperature: 0.7, maxTokens: 200 },
+        );
+      }
 
       // Use OpenAI's DALL-E for image generation
       try {
@@ -368,31 +406,63 @@ const ContentTransformationTab: React.FC = () => {
           n: 1, // DALL-E 3 only supports 1 image per request
           size: imageSize,
           quality: imageQuality,
-          style: imageStyle === "realistic" ? "natural" : "vivid",
+          style: "vivid", // Always use vivid style for better results
         };
 
         // Generate images using OpenAI's DALL-E
         for (let i = 0; i < imgCountVal; i++) {
           try {
-            // Use a slightly different prompt for each image to get variety
-            const finalPrompt =
-              i === 0
-                ? enhancedPrompt
-                : `${enhancedPrompt} Create a different perspective or angle for variety.`;
+            let generatedImages;
 
-            // Call OpenAI API to generate images
-            const generatedImages = await generateImage(
-              finalPrompt,
-              openAISettings,
-            );
+            if (hasReferenceImages) {
+              // Prepare reference images for the API
+              const preparedReferenceImages = referenceImages.map((ref) => ({
+                image: ref.file, // The actual file
+                tag: ref.tag, // The purpose/tag of the image
+                weight: ref.weight / 100, // Convert 0-100 to 0-1 scale
+              }));
+
+              // Use a slightly different prompt for each image to get variety
+              const promptVariation =
+                i === 0
+                  ? ""
+                  : " Create a different perspective or angle for variety.";
+
+              // Generate image with reference images using multi-stage generation
+              generatedImages = await generateImageWithReferences(
+                `Create a professional marketing image based on this content: "${contentSummary}". The image should be in ${imageStyle} style.${promptVariation}`,
+                preparedReferenceImages,
+                {
+                  ...openAISettings,
+                  multiStageGeneration: true,
+                  stageCount: 2, // Use 2 stages for better quality without excessive API usage
+                  refinementStrength: 0.7,
+                },
+              );
+            } else {
+              // Use a slightly different prompt for each image to get variety
+              const finalPrompt =
+                i === 0
+                  ? enhancedPrompt
+                  : `${enhancedPrompt} Create a different perspective or angle for variety.`;
+
+              // Call OpenAI API to generate images without reference images
+              generatedImages = await generateImage(
+                finalPrompt,
+                openAISettings,
+              );
+            }
 
             if (generatedImages && generatedImages.length > 0) {
               generatedImages.forEach((image) => {
                 images.push({
                   url: image.url,
                   alt: title,
-                  prompt: finalPrompt,
+                  prompt: hasReferenceImages
+                    ? "Generated with reference images"
+                    : enhancedPrompt,
                   revised_prompt: image.revised_prompt,
+                  used_references: hasReferenceImages,
                 });
               });
             }
@@ -436,6 +506,8 @@ const ContentTransformationTab: React.FC = () => {
             style: imageStyle,
             size: imageSize,
             quality: imageQuality,
+            usedReferenceImages: hasReferenceImages,
+            referenceImagesCount: referenceImages.length,
           },
         };
       } catch (apiError) {
@@ -909,7 +981,21 @@ const ContentTransformationTab: React.FC = () => {
       case "image":
         return (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Generated Images</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Generated Images</h3>
+              {transformationResult.settings.usedReferenceImages && (
+                <Badge variant="secondary" className="text-xs">
+                  <Info className="h-3 w-3 mr-1" />
+                  Generated with{" "}
+                  {
+                    transformationResult.settings.referenceImagesCount
+                  } reference{" "}
+                  {transformationResult.settings.referenceImagesCount === 1
+                    ? "image"
+                    : "images"}
+                </Badge>
+              )}
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {transformationResult.images.map((image: any, index: number) => (
                 <div key={index} className="relative group">
@@ -918,6 +1004,12 @@ const ContentTransformationTab: React.FC = () => {
                     alt={image.alt}
                     className="w-full h-auto rounded-md object-cover aspect-square"
                   />
+                  {image.used_references && (
+                    <Badge className="absolute top-2 left-2 bg-blue-500/70 text-white">
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      Reference Enhanced
+                    </Badge>
+                  )}
                   <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-2 opacity-0 group-hover:opacity-100 transition-opacity flex justify-end space-x-2">
                     <Button
                       size="sm"
@@ -1302,77 +1394,167 @@ const ContentTransformationTab: React.FC = () => {
         <CardContent>
           {/* Text to Image Settings */}
           {transformationType === "text-to-image" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="image-style">Image Style</Label>
-                <Select value={imageStyle} onValueChange={setImageStyle}>
-                  <SelectTrigger
-                    id="image-style"
-                    className="bg-gray-800 border-gray-700"
-                  >
-                    <SelectValue placeholder="Select style" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="realistic">Realistic</SelectItem>
-                    <SelectItem value="cartoon">Cartoon</SelectItem>
-                    <SelectItem value="3d">3D Render</SelectItem>
-                    <SelectItem value="sketch">Sketch</SelectItem>
-                    <SelectItem value="painting">Painting</SelectItem>
-                  </SelectContent>
-                </Select>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="image-style">Image Style</Label>
+                  <Select value={imageStyle} onValueChange={setImageStyle}>
+                    <SelectTrigger
+                      id="image-style"
+                      className="bg-gray-800 border-gray-700"
+                    >
+                      <SelectValue placeholder="Select style" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="vivid">Vivid (Recommended)</SelectItem>
+                      <SelectItem value="natural">Photorealistic</SelectItem>
+                      <SelectItem value="realistic">Realistic</SelectItem>
+                      <SelectItem value="cartoon">Cartoon</SelectItem>
+                      <SelectItem value="3d">3D Render</SelectItem>
+                      <SelectItem value="sketch">Sketch</SelectItem>
+                      <SelectItem value="painting">Painting</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="image-size">Image Size</Label>
+                  <Select value={imageSize} onValueChange={setImageSize}>
+                    <SelectTrigger
+                      id="image-size"
+                      className="bg-gray-800 border-gray-700"
+                    >
+                      <SelectValue placeholder="Select size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1024x1024">
+                        Square (1024x1024)
+                      </SelectItem>
+                      <SelectItem value="1792x1024">
+                        Widescreen HD (1792x1024)
+                      </SelectItem>
+                      <SelectItem value="1024x1792">
+                        Portrait HD (1024x1792)
+                      </SelectItem>
+                      <SelectItem value="1024x512">Wide (1024x512)</SelectItem>
+                      <SelectItem value="512x1024">Tall (512x1024)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="image-count">Number of Images</Label>
+                  <Select value={imageCount} onValueChange={setImageCount}>
+                    <SelectTrigger
+                      id="image-count"
+                      className="bg-gray-800 border-gray-700"
+                    >
+                      <SelectValue placeholder="Select count" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1 Image</SelectItem>
+                      <SelectItem value="2">2 Images</SelectItem>
+                      <SelectItem value="4">4 Images</SelectItem>
+                      <SelectItem value="8">8 Images</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="image-quality">Image Quality</Label>
+                  <Select value={imageQuality} onValueChange={setImageQuality}>
+                    <SelectTrigger
+                      id="image-quality"
+                      className="bg-gray-800 border-gray-700"
+                    >
+                      <SelectValue placeholder="Select quality" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="hd">HD (Recommended)</SelectItem>
+                      <SelectItem value="standard">Standard</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="enhanced-prompts">
+                      Enhanced Prompt Engineering
+                    </Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-gray-400" />
+                        </TooltipTrigger>
+                        <TooltipContent side="left" className="max-w-xs">
+                          <p className="text-xs">
+                            Uses advanced prompt engineering techniques to
+                            create more detailed and effective prompts for image
+                            generation, especially when using reference images.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="enhanced-prompts"
+                      checked={true}
+                      disabled={true}
+                      onCheckedChange={() => {}}
+                    />
+                    <Label
+                      htmlFor="enhanced-prompts"
+                      className="text-sm text-gray-300"
+                    >
+                      Use advanced prompt engineering for better results
+                      (Premium feature)
+                    </Label>
+                  </div>
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="multi-stage-generation">
+                      Multi-Stage Generation
+                    </Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-gray-400" />
+                        </TooltipTrigger>
+                        <TooltipContent side="left" className="max-w-xs">
+                          <p className="text-xs">
+                            Uses a multi-stage approach to generate higher
+                            quality images. The system creates an initial image,
+                            analyzes it, and then refines it in subsequent
+                            stages for improved detail and quality.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="multi-stage-generation"
+                      checked={true}
+                      disabled={true}
+                      onCheckedChange={() => {}}
+                    />
+                    <Label
+                      htmlFor="multi-stage-generation"
+                      className="text-sm text-gray-300"
+                    >
+                      Use multi-stage generation for higher quality results
+                      (Premium feature)
+                    </Label>
+                  </div>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="image-size">Image Size</Label>
-                <Select value={imageSize} onValueChange={setImageSize}>
-                  <SelectTrigger
-                    id="image-size"
-                    className="bg-gray-800 border-gray-700"
-                  >
-                    <SelectValue placeholder="Select size" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="512x512">Small (512x512)</SelectItem>
-                    <SelectItem value="1024x1024">
-                      Medium (1024x1024)
-                    </SelectItem>
-                    <SelectItem value="2048x2048">Large (2048x2048)</SelectItem>
-                    <SelectItem value="1024x512">Wide (1024x512)</SelectItem>
-                    <SelectItem value="512x1024">Tall (512x1024)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="image-count">Number of Images</Label>
-                <Select value={imageCount} onValueChange={setImageCount}>
-                  <SelectTrigger
-                    id="image-count"
-                    className="bg-gray-800 border-gray-700"
-                  >
-                    <SelectValue placeholder="Select count" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1 Image</SelectItem>
-                    <SelectItem value="2">2 Images</SelectItem>
-                    <SelectItem value="4">4 Images</SelectItem>
-                    <SelectItem value="8">8 Images</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="image-quality">Image Quality</Label>
-                <Select value={imageQuality} onValueChange={setImageQuality}>
-                  <SelectTrigger
-                    id="image-quality"
-                    className="bg-gray-800 border-gray-700"
-                  >
-                    <SelectValue placeholder="Select quality" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="standard">Standard</SelectItem>
-                    <SelectItem value="hd">HD</SelectItem>
-                    <SelectItem value="premium">Premium</SelectItem>
-                  </SelectContent>
-                </Select>
+
+              {/* Reference Images Uploader */}
+              <div className="border-t border-gray-700 pt-4">
+                <ReferenceImageUploader
+                  images={referenceImages}
+                  onChange={setReferenceImages}
+                  maxImages={5}
+                />
               </div>
             </div>
           )}
